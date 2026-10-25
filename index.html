@@ -444,7 +444,8 @@ function drawStick(canvas, dir) {
 function drawDuel() {
   const base = { k: "#0b0607", s: "#f2b98a", h: "#2a1510", b: "#0b0607" };
   drawSprite($("#p1"), FIGHTER, { ...base, g: cssVar("--fg"), r: cssVar("--crimson") });
-  drawSprite($("#p2"), FIGHTER, { ...base, g: cssVar("--crimson"), r: cssVar("--gold"), s: "#c98a5e" }, true);
+  // P2 dressed as Ken: red gi, black belt, blond hair (no headband, so the band and its tails become loose hair)
+  drawSprite($("#p2"), FIGHTER, { ...base, g: "#d4202c", h: "#f6c844", r: "#f6c844" }, true);
 }
 
 /* ---------- Notation ---------- */
