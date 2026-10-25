@@ -1,0 +1,745 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Fight Dojo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: arcade flow — pick a game (three VS panels), then a character-select roster, then the fighter's page with its combos, tips, tutorials and lore. Single deliberate dark look: oxblood, bone and arcade gold. No blue. */
+:root {
+  --bg: #170d0e;
+  --band: #221214;
+  --surface: #2a1719;
+  --surface-hi: #341d20;
+  --surface-2: #1d1011;
+  --line: #4a2a2d;
+  --fg: #f5e9d6;
+  --muted: #b89d90;
+  --gold: #ffb627;
+  --crimson: #e8333d;
+  --jade: #3fc48a;
+  --gold-ink: #1d0f05;
+  --t-tutorial: #ffb627;
+  --t-lore: #d68cff;
+  --t-combo: #ff4b55;
+  --t-tip: #7fd67a;
+  --btn-p: #ffb627;
+  --btn-k: #ff4b55;
+  --btn-x: #7fd67a;
+  --chip-ink: #170d0e;
+  --danger: #ff6b6b;
+  --f-display: "Teko", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --cut: 14px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+
+/* Header */
+.band {
+  background:
+    repeating-linear-gradient(115deg, transparent 0 22px, rgb(255 182 39 / .035) 22px 24px),
+    linear-gradient(100deg, var(--band) 0 62%, var(--crimson) 62% 62.6%, var(--surface) 62.6% 100%);
+  border-bottom: 3px solid var(--gold);
+}
+.band .wrap { padding-block: 22px 20px; display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.home-link { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.kicker { font-family: var(--f-mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.logo { display: block; margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(54px, 9vw, 96px); line-height: .78; text-transform: uppercase; font-style: italic; transform: skewX(-6deg); transform-origin: left bottom; padding-top: .14em; }
+.logo span { color: var(--gold); text-shadow: 4px 4px 0 var(--crimson); }
+.add-btn { background: var(--gold); color: var(--gold-ink); border: 0; padding: 12px 22px 9px; font-family: var(--f-display); font-weight: 600; font-size: 22px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.add-btn:hover { background: var(--fg); }
+
+main.wrap { padding-block: 22px 56px; display: grid; gap: 34px; }
+section { display: grid; gap: 14px; min-width: 0; }
+.sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sec-h h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 36px; line-height: 1; text-transform: uppercase; }
+.sec-h .note { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+
+/* Breadcrumbs */
+.crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.crumbs button { background: none; border: 0; padding: 0; cursor: pointer; color: var(--gold); text-transform: inherit; letter-spacing: inherit; }
+.crumbs button:hover { color: var(--fg); }
+
+/* Search */
+.search { display: flex; gap: 10px; flex-wrap: wrap; }
+.search input { flex: 1 1 280px; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 0; padding: 12px 16px; font-size: 17px; }
+.search input:focus { border-color: var(--gold); outline: none; }
+
+/* Game select */
+.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.game-card { position: relative; overflow: hidden; text-align: left; border: 0; cursor: pointer; background: var(--surface); padding: 22px 22px 26px; min-height: 200px; display: grid; align-content: end; gap: 4px; transition: background-color .15s, transform .15s; }
+.game-card::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--gc); }
+.game-card:hover { background: var(--surface-hi); transform: translateY(-3px); }
+.game-card .ghost-txt { position: absolute; right: -6px; top: -14px; font-family: var(--f-display); font-weight: 700; font-style: italic; font-size: 170px; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px var(--gc); opacity: .45; pointer-events: none; }
+.game-card .gname { position: relative; font-family: var(--f-display); font-weight: 600; font-size: 38px; line-height: .9; text-transform: uppercase; }
+.game-card .gmeta { position: relative; font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.game-card .gmeta b { color: var(--gc); }
+
+/* Roster */
+.game-head { display: flex; align-items: end; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+.big-name { margin: 4px 0 0; font-family: var(--f-display); font-weight: 700; font-style: italic; font-size: clamp(56px, 10vw, 110px); line-height: .8; text-transform: uppercase; transform: skewX(-6deg); transform-origin: left bottom; padding-top: .12em; text-wrap: balance; }
+.big-name span { color: var(--gc, var(--gold)); }
+.roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.fighter { position: relative; text-align: left; border: 0; cursor: pointer; background: var(--surface); padding: 12px 14px 14px; display: grid; gap: 2px; min-width: 0; transition: background-color .12s, transform .12s; --cut: 12px; }
+.fighter:hover { background: var(--surface-hi); transform: translateY(-2px); }
+.fighter .mono { font-family: var(--f-display); font-weight: 700; font-style: italic; font-size: 54px; line-height: .8; color: var(--gc); padding-top: 6px; opacity: .35; }
+.fighter.has .mono { opacity: 1; }
+.fighter .fname { font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: .95; text-transform: uppercase; overflow-wrap: anywhere; }
+.fighter .fcount { font-family: var(--f-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fighter.has .fcount { color: var(--gc); }
+.fighter .fgame { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.fighter.general { background: var(--surface-2); outline: 1px dashed var(--line); outline-offset: -1px; }
+
+/* Type tabs */
+.tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 2px 6px; }
+.tab { flex: none; background: var(--surface-2); border: 0; padding: 8px 20px 5px; cursor: pointer; color: var(--muted); font-family: var(--f-display); font-weight: 600; font-size: 22px; line-height: 1; text-transform: uppercase; letter-spacing: .04em; display: flex; gap: 10px; align-items: baseline; transform: skewX(-14deg); }
+.tab > * { transform: skewX(14deg); display: inline-block; }
+.tab .n { font-family: var(--f-mono); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tab:hover { color: var(--fg); background: var(--surface); }
+.tab[aria-selected="true"] { background: var(--tc, var(--gold)); color: var(--chip-ink); }
+
+/* Entry cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.card { position: relative; text-align: left; background: var(--surface); border: 0; padding: 18px 20px 20px; cursor: pointer; display: grid; gap: 10px; align-content: start; min-width: 0; transition: background-color .15s, transform .15s; }
+.card::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--tc); transform: scaleX(.18); transform-origin: left; transition: transform .2s; }
+.card:hover { background: var(--surface-hi); transform: translateY(-2px); }
+.card:hover::after { transform: scaleX(1); }
+.meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.tag { font-family: var(--f-display); font-weight: 600; font-size: 17px; line-height: 1; text-transform: uppercase; letter-spacing: .05em; color: var(--chip-ink); background: var(--tc); padding: 4px 8px 1px; transform: skewX(-12deg); }
+.example, .vid { font-family: var(--f-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); border: 1px dashed var(--line); padding: 1px 6px; }
+.vid { border-style: solid; color: var(--fg); }
+.card h3 { margin: 0; font-family: var(--f-display); font-size: 30px; line-height: .95; font-weight: 600; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.stats { display: flex; gap: 16px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--gold); }
+
+/* Notation */
+.inputs { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; background: var(--surface-2); padding: 8px 10px; overflow-x: auto; border-left: 2px solid var(--gold); }
+.mv { font-size: 18px; line-height: 1; font-weight: 700; color: var(--fg); }
+.mv.hold { color: var(--gold); }
+.bt { font-family: var(--f-mono); font-weight: 700; font-size: 12px; color: var(--chip-ink); background: var(--btn-x); border-radius: 999px; min-width: 26px; height: 26px; padding: 0 6px; display: inline-grid; place-items: center; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .25); }
+.bt.p { background: var(--btn-p); }
+.bt.k { background: var(--btn-k); }
+.lk { color: var(--gold); font-family: var(--f-mono); font-size: 12px; padding: 0 2px; }
+.pre { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.raw { font-family: var(--f-mono); font-size: 13px; }
+.step { display: inline-flex; align-items: center; gap: 2px; }
+
+/* Empty */
+.empty { grid-column: 1 / -1; border: 2px dashed var(--line); padding: 40px 24px; text-align: center; color: var(--muted); }
+.empty h3 { margin: 0 0 6px; color: var(--fg); font-family: var(--f-display); font-size: 34px; font-weight: 600; text-transform: uppercase; line-height: 1; }
+.empty p { margin: 0; }
+
+/* Dialogs */
+dialog { width: min(760px, calc(100% - 32px)); max-height: calc(100% - 48px); background: var(--surface); color: var(--fg); border: 0; border-top: 4px solid var(--tc, var(--gold)); padding: 0; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%); }
+dialog::backdrop { background: rgb(10 5 6 / .78); }
+.dlg { padding: 22px 26px 28px; display: grid; gap: 16px; }
+.dlg-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.dlg h2 { margin: 8px 0 0; font-family: var(--f-display); font-weight: 600; font-size: clamp(36px, 6vw, 52px); line-height: .9; text-transform: uppercase; text-wrap: balance; }
+.x { background: var(--surface-2); border: 0; width: 38px; height: 38px; cursor: pointer; flex: none; font-size: 20px; }
+.x:hover { background: var(--crimson); }
+.body { max-width: 65ch; }
+.body p { margin: 0 0 12px; }
+.body ul { margin: 0 0 12px; padding-left: 20px; }
+.body li::marker { color: var(--gold); }
+.body h4 { margin: 20px 0 6px; font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: 1; text-transform: uppercase; color: var(--gold); }
+.body .inputs { display: inline-flex; padding: 3px 8px; vertical-align: middle; }
+.facts { display: flex; gap: 26px; flex-wrap: wrap; }
+.facts div { display: grid; }
+.facts span { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.facts b { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.watch { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--fg); background: var(--surface-2); padding: 14px 16px; border-left: 3px solid var(--crimson); }
+.watch:hover { background: var(--bg); }
+.watch .play { width: 46px; height: 46px; flex: none; background: var(--crimson); display: grid; place-items: center; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); font-size: 18px; }
+.watch b { display: block; font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: 1; text-transform: uppercase; }
+.watch small { font-family: var(--f-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 16px; }
+.ghost { background: none; border: 1px solid var(--line); padding: 9px 16px; cursor: pointer; font-weight: 600; }
+.ghost:hover { border-color: var(--fg); }
+.ghost.danger { color: var(--danger); border-color: var(--danger); }
+
+form.dlg label { display: grid; gap: 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+form.dlg input, form.dlg select, form.dlg textarea { background: var(--surface-2); border: 1px solid var(--line); border-radius: 0; padding: 10px 12px; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-weight: 400; color: var(--fg); font-size: 15px; width: 100%; min-width: 0; }
+form.dlg input:focus, form.dlg select:focus, form.dlg textarea:focus { border-color: var(--gold); outline: none; }
+form.dlg textarea { min-height: 160px; resize: vertical; line-height: 1.5; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.hint { font-family: var(--f-body); font-size: 13px; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 400; margin: 0; }
+.err { color: var(--danger); font-size: 14px; }
+
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: 18px 28px; color: var(--muted); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .band { background: repeating-linear-gradient(115deg, transparent 0 22px, rgb(255 182 39 / .035) 22px 24px), var(--band); }
+  .roster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .card, .card::after, .fighter, .game-card { transition: none; } .card:hover, .fighter:hover, .game-card:hover { transform: none; } }
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <button class="home-link" id="homeLink" aria-label="Ir al inicio">
+      <span class="kicker">Biblioteca de juegos de pelea</span>
+      <span class="logo">Fight <span>Dojo</span></span>
+    </button>
+    <button class="add-btn" id="addBtn" hidden>+ Nueva entrada</button>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+
+<footer><div class="wrap" id="legend"></div></footer>
+
+<dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
+
+<dialog id="editDlg">
+  <form class="dlg" id="editForm">
+    <div class="dlg-head">
+      <h2 id="editTitle">Nueva entrada</h2>
+      <button type="button" class="x" data-close aria-label="Cerrar">×</button>
+    </div>
+    <div class="row">
+      <label>Juego <select id="f-game" required></select></label>
+      <label>Personaje <select id="f-character"></select></label>
+      <label>Tipo
+        <select id="f-type" required>
+          <option value="combo">Combo</option>
+          <option value="tip">Tip</option>
+          <option value="tutorial">Tutorial</option>
+          <option value="lore">Lore</option>
+        </select>
+      </label>
+    </div>
+    <label>Título <input id="f-title" required maxlength="120"></label>
+    <label>Resumen <input id="f-summary" maxlength="200" placeholder="Una línea que aparece en la tarjeta"></label>
+    <div id="comboFields" class="row" hidden>
+      <label style="grid-column: 1 / -1">Notación
+        <input id="f-notation">
+        <span class="hint" id="notationHint"></span>
+      </label>
+      <label>Daño <input id="f-damage" inputmode="numeric" placeholder="2400"></label>
+      <label>Dificultad
+        <select id="f-difficulty">
+          <option value="1">Fácil</option>
+          <option value="2">Media</option>
+          <option value="3">Difícil</option>
+        </select>
+      </label>
+      <label>Recurso <input id="f-meter" placeholder="Sin barra / 1 Drive / Heat"></label>
+    </div>
+    <label>Contenido
+      <textarea id="f-body" placeholder="Dejá una línea en blanco entre párrafos. Empezá una línea con - para listas o con ## para un subtítulo. Poné inputs entre `backticks` para dibujarlos."></textarea>
+    </label>
+    <label>Video o guía de referencia <input id="f-source" type="url" placeholder="https://youtube.com/… (opcional)"></label>
+    <p class="err" id="formErr" hidden></p>
+    <div class="actions">
+      <button type="button" class="ghost" data-close>Cancelar</button>
+      <button type="submit" class="add-btn" id="saveBtn">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ---------- Games and rosters ---------- */
+const GAMES = [
+  { id: "sf6", short: "SF6", name: "Street Fighter 6", accent: "--gold", style: "numpad", aliases: ["Street Fighter"],
+    roster: ["A.K.I.", "Akuma", "Alex", "Blanka", "C. Viper", "Cammy", "Chun-Li", "Dee Jay", "Dhalsim", "E. Honda", "Ed", "Elena", "Guile", "Ingrid", "Jamie", "JP", "Juri", "Ken", "Kimberly", "Lily", "Luke", "M. Bison", "Mai", "Manon", "Marisa", "Rashid", "Ryu", "Sagat", "Terry", "Zangief"] },
+  { id: "t8", short: "T8", name: "Tekken 8", accent: "--crimson", style: "tekken", aliases: ["Tekken"],
+    roster: ["Alisa", "Anna", "Armor King", "Asuka", "Azucena", "Bryan", "Claudio", "Clive", "Devil Jin", "Dragunov", "Eddy", "Fahkumram", "Feng", "Heihachi", "Hwoarang", "Jack-8", "Jin", "Jun", "Kazuya", "King", "Kuma", "Lars", "Law", "Lee", "Leo", "Leroy", "Lidia", "Lili", "Nina", "Panda", "Paul", "Raven", "Reina", "Shaheen", "Steve", "Victor", "Xiaoyu", "Yoshimitsu", "Zafina"] },
+  { id: "mk1", short: "MK1", name: "Mortal Kombat 1", accent: "--jade", style: "mk", aliases: ["Mortal Kombat"],
+    roster: ["Ashrah", "Baraka", "Conan", "Cyrax", "Ermac", "General Shao", "Geras", "Ghostface", "Havik", "Homelander", "Johnny Cage", "Kenshi", "Kitana", "Kung Lao", "Li Mei", "Liu Kang", "Mileena", "Nitara", "Noob Saibot", "Omni-Man", "Peacemaker", "Quan Chi", "Raiden", "Rain", "Reptile", "Scorpion", "Sektor", "Shang Tsung", "Sindel", "Smoke", "Sub-Zero", "T-1000", "Takeda", "Tanya"] },
+];
+const GENERAL = "";   // entries with no character belong to the whole game
+
+const TYPES = {
+  all:      { label: "Todo",     plural: "Todo",       color: "--gold" },
+  combo:    { label: "Combo",    plural: "Combos",     color: "--t-combo" },
+  tip:      { label: "Tip",      plural: "Tips",       color: "--t-tip" },
+  tutorial: { label: "Tutorial", plural: "Tutoriales", color: "--t-tutorial" },
+  lore:     { label: "Lore",     plural: "Lore",       color: "--t-lore" },
+};
+const DIFF = { 1: "Fácil", 2: "Media", 3: "Difícil" };
+const LEGEND = {
+  numpad: "Notación numérica: 2 abajo, 6 adelante, 236 cuarto de círculo adelante. LP/MP/HP golpes, LK/MK/HK patadas. > enlace, xx cancel, j. salto.",
+  tekken: "Notación Tekken: 1 puño izq., 2 puño der., 3 patada izq., 4 patada der. f/b/u/d direcciones (mayúscula = mantener), df = abajo-adelante. Coma separa golpes de una cadena.",
+  mk: "Notación MK1: 1 puño frontal, 2 puño trasero, 3 patada frontal, 4 patada trasera. F/B/D/U direcciones, por ejemplo B2 o D1. Coma separa golpes de una cadena.",
+};
+
+const state = { entries: [], route: { game: null, char: null }, type: "all", q: "", canEdit: false, loaded: false, offline: false, editingId: null };
+let db = null;
+
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const tc = (type) => `var(${(TYPES[type] || TYPES.all).color})`;
+const slug = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const gameById = (id) => GAMES.find((g) => g.id === id);
+const gameOf = (e) => GAMES.find((g) => g.name === e.game || g.aliases.includes(e.game));
+const charsOf = (g) => {
+  const extra = state.entries.filter((e) => gameOf(e) === g && e.character && !g.roster.includes(e.character)).map((e) => e.character);
+  return [...new Set([...g.roster, ...extra])].sort((a, b) => a.localeCompare(b));
+};
+const entriesFor = (g, c) => state.entries.filter((e) => gameOf(e) === g && (c == null || (e.character || GENERAL) === c));
+const monogram = (name) => { const w = name.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/); return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).toUpperCase(); };
+const ytLink = (u) => /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(u || "");
+
+/* ---------- Notation ---------- */
+const ARROWS = { 1: "↙", 2: "↓", 3: "↘", 4: "←", 5: "•", 6: "→", 7: "↖", 8: "↑", 9: "↗" };
+const DIRS = { u: "↑", d: "↓", f: "→", b: "←", uf: "↗", ub: "↖", df: "↘", db: "↙", n: "•" };
+const LINKS = { ">": "›", ",": ",", "xx": "xx", "~": "~", "→": "›", "|>": "›" };
+const PRE = { "j.": "salto", "c.": "cerca", "f.": "lejos", "s.": "parado", "cr.": "agachado", "dl.": "delay" };
+const TPRE = { "ws": "al levantarse", "fc": "agachado", "ss": "sidestep", "wr": "corriendo", "h.": "heat", "ch": "counter", "jf": "just frame", "dash": "dash" };
+const BTN_RE = /^(LP|MP|HP|LK|MK|HK|PP|KK|P|K|S|HS|H|D|A|B|C|L|M|DI|DR|OD|SA[1-3]?)$/i;
+
+function btnClass(b) {
+  const u = b.toUpperCase();
+  if (/^(LP|MP|HP|PP|P|1|2)$/.test(u)) return "bt p";
+  if (/^(LK|MK|HK|KK|K|3|4)$/.test(u)) return "bt k";
+  return "bt";
+}
+
+function numpadStep(tok, step) {
+  let rest = tok;
+  const pre = Object.keys(PRE).find((p) => rest.toLowerCase().startsWith(p));
+  if (pre) { step.append(el("span", "pre", PRE[pre] + " ")); rest = rest.slice(pre.length); }
+  const m = rest.match(/^([1-9]*)(\[?[A-Za-z+]+\]?)?$/);
+  if (!m || !(m[1] || m[2])) return step.append(el("span", "raw", rest));
+  for (const d of m[1]) step.append(el("span", "mv", ARROWS[d]));
+  if (m[2]) m[2].replace(/[\[\]]/g, "").split("+").forEach((b, i) => {
+    if (i) step.append(el("span", "lk", "+"));
+    step.append(el("span", BTN_RE.test(b) ? btnClass(b) : "raw", b.toUpperCase()));
+  });
+}
+
+// Tekken / MK: directions as letters (u d f b, combos like df), buttons 1-4, "+" presses together.
+function digitStep(tok, step, style) {
+  let rest = tok;
+  const pre = Object.keys(TPRE).find((p) => rest.toLowerCase().startsWith(p) && rest.length > p.length);
+  if (pre) { step.append(el("span", "pre", TPRE[pre] + " ")); rest = rest.slice(pre.length).replace(/^[.+]/, ""); }
+  const parts = rest.split("+").filter(Boolean);
+  parts.forEach((part, i) => {
+    if (i) step.append(el("span", "lk", "+"));
+    const m = part.match(/^((?:[udfbn]|\/)*)([1-4]*)$/i);
+    if (!m || !(m[1] || m[2])) return step.append(el("span", "raw", part));
+    const dirs = m[1].replace(/\//g, "");
+    for (let j = 0; j < dirs.length;) {
+      const two = dirs.slice(j, j + 2), lower = two.toLowerCase();
+      const len = DIRS[lower] && two.length === 2 ? 2 : 1;
+      const d = dirs.slice(j, j + len);
+      step.append(el("span", "mv" + (style === "tekken" && d === d.toUpperCase() ? " hold" : ""), DIRS[d.toLowerCase()] || d));
+      j += len;
+    }
+    for (const b of m[2]) step.append(el("span", btnClass(b), b));
+  });
+}
+
+function renderNotation(str, style) {
+  const box = el("span", "inputs");
+  const src = style === "numpad" ? String(str) : String(str).replace(/,/g, " , ");
+  for (const tok of src.trim().split(/\s+/).filter(Boolean)) {
+    if (LINKS[tok.toLowerCase()]) { box.append(el("span", "lk", LINKS[tok.toLowerCase()])); continue; }
+    const step = el("span", "step");
+    if (style === "numpad") numpadStep(tok, step); else digitStep(tok, step, style);
+    box.append(step);
+  }
+  return box;
+}
+
+/* ---------- Body text ---------- */
+function inline(text, into, style) {
+  String(text).split(/`([^`]+)`/).forEach((p, i) => { if (i % 2) into.append(renderNotation(p, style)); else if (p) into.append(document.createTextNode(p)); });
+  return into;
+}
+function renderBody(text, style) {
+  const wrap = el("div", "body");
+  for (const block of String(text || "").replace(/\r/g, "").split(/\n\s*\n/)) {
+    const lines = block.split("\n").filter((l) => l.trim());
+    if (!lines.length) continue;
+    if (lines.every((l) => /^\s*[-*]\s+/.test(l))) {
+      const ul = el("ul");
+      lines.forEach((l) => ul.append(inline(l.replace(/^\s*[-*]\s+/, ""), el("li"), style)));
+      wrap.append(ul);
+    } else if (lines.length === 1 && /^##\s+/.test(lines[0])) {
+      wrap.append(el("h4", null, lines[0].replace(/^##\s+/, "")));
+    } else {
+      wrap.append(inline(lines.join(" "), el("p"), style));
+    }
+  }
+  return wrap;
+}
+
+/* ---------- Routing ---------- */
+function go(game, char, keepType) {
+  state.route = { game: game || null, char: char == null ? null : char };
+  if (!keepType) state.type = "all";
+  state.q = "";
+  const token = !game ? "inicio" : char == null ? game : `${game}-${char === GENERAL ? "general" : slug(char)}`;
+  try { history.replaceState(null, "", "#" + token); } catch {}
+  render();
+  window.scrollTo({ top: 0 });
+}
+function routeFromHash() {
+  const h = (location.hash || "").slice(1).toLowerCase();
+  const g = GAMES.find((x) => h === x.id || h.startsWith(x.id + "-"));
+  if (!g) return { game: null, char: null };
+  if (h === g.id) return { game: g.id, char: null };
+  const rest = h.slice(g.id.length + 1);
+  if (rest === "general") return { game: g.id, char: GENERAL };
+  const c = g.roster.find((n) => slug(n) === rest);
+  return { game: g.id, char: c ?? null, pendingSlug: c ? null : rest };
+}
+
+/* ---------- Pieces ---------- */
+function crumbs(parts) {
+  const nav = el("nav", "crumbs");
+  nav.setAttribute("aria-label", "Ubicación");
+  parts.forEach(([label, fn], i) => {
+    if (i) nav.append(el("span", null, "/"));
+    if (fn) { const b = el("button", null, label); b.type = "button"; b.onclick = fn; nav.append(b); }
+    else nav.append(el("span", null, label));
+  });
+  return nav;
+}
+
+function fighterTile(g, name, showGame) {
+  const n = entriesFor(g, name).length;
+  const b = el("button", "fighter cut" + (n ? " has" : "") + (name === GENERAL ? " general" : ""));
+  b.type = "button";
+  b.style.setProperty("--gc", `var(${g.accent})`);
+  b.append(el("span", "mono", name === GENERAL ? "★" : monogram(name)));
+  if (showGame) b.append(el("span", "fgame", g.short));
+  b.append(el("span", "fname", name === GENERAL ? "General del juego" : name));
+  b.append(el("span", "fcount", n ? `${n} ${n === 1 ? "entrada" : "entradas"}` : "Sin entradas"));
+  b.onclick = () => go(g.id, name);
+  return b;
+}
+
+function card(e, ctx) {
+  const g = gameOf(e);
+  const c = el("button", "card cut");
+  c.type = "button";
+  c.style.setProperty("--tc", tc(e.type));
+  const meta = el("div", "meta");
+  meta.append(el("span", "tag", (TYPES[e.type] || TYPES.all).label));
+  const where = ctx === "char" ? [] : [g ? g.short : e.game, e.character || (ctx === "game" ? "" : "General")];
+  if (where.filter(Boolean).length) meta.append(el("span", null, where.filter(Boolean).join(" · ")));
+  if (ytLink(e.source)) meta.append(el("span", "vid", "▶ Video"));
+  if (e.example) meta.append(el("span", "example", "Ejemplo"));
+  c.append(meta, el("h3", null, e.title || "Sin título"));
+  if (e.type === "combo" && e.notation) c.append(renderNotation(e.notation, g ? g.style : "numpad"));
+  if (e.summary) c.append(el("p", null, e.summary));
+  if (e.type === "combo" && (e.damage || e.difficulty)) {
+    const s = el("div", "stats");
+    if (e.damage) { const d = el("span"); d.append("DMG ", el("b", null, String(e.damage))); s.append(d); }
+    if (e.difficulty) { const d = el("span"); d.append("DIF ", el("b", null, DIFF[e.difficulty] || e.difficulty)); s.append(d); }
+    c.append(s);
+  }
+  c.onclick = () => openView(e.id);
+  return c;
+}
+
+function emptyBox(title, text) {
+  const d = el("div", "empty");
+  d.append(el("h3", null, title), el("p", null, text));
+  return d;
+}
+
+function loadingOr(grid) {
+  if (state.loaded) return false;
+  grid.append(emptyBox(state.offline ? "No se pudo cargar el contenido" : "Cargando el dojo…",
+    state.offline ? "Esta vista no tiene acceso a la base de datos. Abrí la página desde claude.ai con tu sesión iniciada." : "Trayendo combos, tips, tutoriales y lore."));
+  return true;
+}
+
+/* ---------- Views ---------- */
+function viewHome(root) {
+  const games = el("section");
+  const h = el("div", "sec-h"); h.append(el("h2", null, "Elegí tu juego"));
+  games.append(h);
+  const row = el("div", "games");
+  for (const g of GAMES) {
+    const n = entriesFor(g, null).length;
+    const b = el("button", "game-card cut");
+    b.type = "button";
+    b.style.setProperty("--gc", `var(${g.accent})`);
+    b.append(el("span", "ghost-txt", g.short), el("span", "gname", g.name));
+    const m = el("span", "gmeta");
+    m.append(`${g.roster.length} personajes · `, el("b", null, String(n)), ` ${n === 1 ? "entrada" : "entradas"}`);
+    b.append(m);
+    b.onclick = () => go(g.id, null);
+    row.append(b);
+  }
+  games.append(row);
+
+  const find = el("section");
+  const fh = el("div", "sec-h"); fh.append(el("h2", null, "Buscar personaje"));
+  const s = el("div", "search");
+  const input = el("input"); input.id = "q"; input.type = "search"; input.placeholder = "Ken, Kazuya, Scorpion…"; input.setAttribute("aria-label", "Buscar personaje en todos los juegos");
+  s.append(input);
+  const results = el("div", "roster");
+  const update = () => {
+    results.textContent = "";
+    const q = slug(input.value);
+    if (!q) { results.hidden = true; return; }
+    results.hidden = false;
+    const hits = GAMES.flatMap((g) => charsOf(g).filter((c) => slug(c).includes(q)).map((c) => [g, c]));
+    if (!hits.length) results.append(emptyBox("Sin resultados", "No hay ningún personaje con ese nombre en SF6, Tekken 8 o MK1."));
+    hits.forEach(([g, c]) => results.append(fighterTile(g, c, true)));
+  };
+  input.addEventListener("input", update);
+  update();
+  find.append(fh, s, results);
+
+  const latest = el("section");
+  const lh = el("div", "sec-h"); lh.append(el("h2", null, "Últimas entradas"));
+  latest.append(lh);
+  const grid = el("div", "grid");
+  if (!loadingOr(grid)) {
+    const list = state.entries.filter(gameOf).slice(0, 6);
+    if (!list.length) grid.append(emptyBox("El dojo está vacío", state.canEdit ? "Elegí un juego y un personaje, y tocá “+ Nueva entrada”." : "Todavía no hay entradas publicadas."));
+    list.forEach((e) => grid.append(card(e, "home")));
+  }
+  latest.append(grid);
+
+  root.append(games, find, latest);
+}
+
+function viewGame(root, g) {
+  const head = el("section");
+  head.style.setProperty("--gc", `var(${g.accent})`);
+  head.append(crumbs([["Inicio", () => go(null)], [g.short]]));
+  const gh = el("div", "game-head");
+  const title = el("h1", "big-name"); title.append(el("span", null, g.name));
+  gh.append(title);
+  head.append(gh);
+
+  const s = el("div", "search");
+  const input = el("input"); input.id = "q"; input.type = "search"; input.placeholder = `Buscar en ${g.name}…`; input.setAttribute("aria-label", "Buscar personaje");
+  s.append(input);
+  const roster = el("div", "roster");
+  const update = () => {
+    roster.textContent = "";
+    const q = slug(input.value);
+    if (!q) roster.append(fighterTile(g, GENERAL));
+    const list = charsOf(g).filter((c) => !q || slug(c).includes(q));
+    if (!list.length && q) roster.append(emptyBox("Sin resultados", `No hay ningún personaje con ese nombre en ${g.name}.`));
+    list.forEach((c) => roster.append(fighterTile(g, c)));
+  };
+  input.addEventListener("input", update);
+  update();
+
+  const sec = el("section");
+  const h = el("div", "sec-h"); h.append(el("h2", null, "Elegí personaje"), el("span", "note", `${charsOf(g).length} personajes`));
+  sec.append(h, s, roster);
+  root.append(head, sec);
+}
+
+function viewChar(root, g, c) {
+  const list = entriesFor(g, c);
+  const head = el("section");
+  head.style.setProperty("--gc", `var(${g.accent})`);
+  head.append(crumbs([["Inicio", () => go(null)], [g.short, () => go(g.id, null)], [c === GENERAL ? "General" : c]]));
+  const title = el("h1", "big-name");
+  title.append(c === GENERAL ? "General" : c);
+  const sub = el("div", "sec-h"); sub.append(el("span", "note", c === GENERAL ? `Tips, tutoriales y lore de ${g.name} que no son de un personaje` : g.name));
+  head.append(title, sub);
+
+  const tabs = el("nav", "tabs");
+  tabs.setAttribute("role", "tablist");
+  for (const [key, t] of Object.entries(TYPES)) {
+    const count = key === "all" ? list.length : list.filter((e) => e.type === key).length;
+    const b = el("button", "tab"); b.type = "button";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(state.type === key));
+    b.style.setProperty("--tc", tc(key));
+    b.append(el("span", null, t.plural));
+    if (state.loaded) b.append(el("span", "n", String(count)));
+    b.onclick = () => { state.type = key; render(); };
+    tabs.append(b);
+  }
+
+  const grid = el("div", "grid");
+  if (!loadingOr(grid)) {
+    const shown = list.filter((e) => state.type === "all" || e.type === state.type);
+    const who = c === GENERAL ? g.name : c;
+    if (!list.length) grid.append(emptyBox(`Nada de ${who} todavía`, state.canEdit ? "Tocá “+ Nueva entrada” para agregar el primer combo, tip, tutorial o lore." : "Todavía no hay entradas para este personaje."));
+    else if (!shown.length) grid.append(emptyBox("Nada en esta categoría", "Probá con otra pestaña."));
+    shown.forEach((e) => grid.append(card(e, "char")));
+  }
+  const sec = el("section"); sec.append(tabs, grid);
+  root.append(head, sec);
+}
+
+function render() {
+  const root = $("#view");
+  root.textContent = "";
+  const g = gameById(state.route.game);
+  if (!g) viewHome(root);
+  else if (state.route.char == null) viewGame(root, g);
+  else viewChar(root, g, state.route.char);
+  $("#legend").textContent = g ? LEGEND[g.style] : "Juegos: Street Fighter 6, Tekken 8 y Mortal Kombat 1. Cada combo se dibuja con la notación de su juego.";
+}
+
+/* ---------- View dialog ---------- */
+function openView(id) {
+  const e = state.entries.find((x) => x.id === id);
+  if (!e) return;
+  const g = gameOf(e);
+  const style = g ? g.style : "numpad";
+  const box = $("#viewBody");
+  box.textContent = "";
+  $("#viewDlg").style.setProperty("--tc", tc(e.type));
+
+  const head = el("div", "dlg-head");
+  const left = el("div");
+  const meta = el("div", "meta");
+  meta.style.setProperty("--tc", tc(e.type));
+  meta.append(el("span", "tag", (TYPES[e.type] || TYPES.all).label), el("span", null, [g ? g.name : e.game, e.character || "General"].join(" · ")));
+  if (e.example) meta.append(el("span", "example", "Ejemplo"));
+  left.append(meta, el("h2", null, e.title));
+  const x = el("button", "x", "×"); x.type = "button"; x.setAttribute("aria-label", "Cerrar"); x.onclick = () => $("#viewDlg").close();
+  head.append(left, x);
+  box.append(head);
+
+  if (e.summary) box.append(el("p", "hint", e.summary));
+  if (e.type === "combo") {
+    if (e.notation) box.append(renderNotation(e.notation, style));
+    const facts = el("div", "facts");
+    [["Daño", e.damage], ["Dificultad", DIFF[e.difficulty]], ["Recurso", e.meter]].forEach(([k, v]) => {
+      if (!v) return;
+      const f = el("div"); f.append(el("span", null, k), el("b", null, String(v))); facts.append(f);
+    });
+    if (facts.children.length) box.append(facts);
+  }
+  if (e.source && /^https?:\/\//.test(e.source)) {
+    const a = el("a", "watch"); a.href = e.source; a.target = "_blank"; a.rel = "noopener";
+    const txt = el("span");
+    txt.append(el("b", null, ytLink(e.source) ? "Ver video en YouTube" : "Ver referencia"), el("small", null, e.source));
+    a.append(el("span", "play", "▶"), txt);
+    box.append(a);
+  }
+  if (e.body) box.append(renderBody(e.body, style));
+
+  if (state.canEdit) {
+    const act = el("div", "actions");
+    const del = el("button", "ghost danger", "Eliminar"); del.type = "button";
+    let armed = false;
+    del.onclick = async () => {
+      if (!armed) { armed = true; del.textContent = "¿Seguro? Tocá de nuevo"; return; }
+      del.disabled = true;
+      try { await db.collection("entries").doc(e.id).delete(); $("#viewDlg").close(); }
+      catch { del.disabled = false; del.textContent = "No se pudo eliminar. Reintentar"; armed = false; }
+    };
+    const ed = el("button", "ghost", "Editar"); ed.type = "button";
+    ed.onclick = () => { $("#viewDlg").close(); openEdit(e); };
+    act.append(del, ed);
+    box.append(act);
+  }
+  $("#viewDlg").showModal();
+}
+
+/* ---------- Edit dialog ---------- */
+const F = ["type", "title", "summary", "notation", "damage", "difficulty", "meter", "body", "source"];
+const PLACEHOLDER = { numpad: "j.HK > 5HP xx 623HP", tekken: "df+1, 2, 1+2", mk: "B2, 1, 2, F1" };
+
+GAMES.forEach((g) => $("#f-game").add(new Option(g.name, g.id)));
+
+function fillChars(gid, selected) {
+  const g = gameById(gid);
+  const sel = $("#f-character");
+  sel.length = 0;
+  sel.add(new Option("General del juego", ""));
+  charsOf(g).forEach((c) => sel.add(new Option(c, c)));
+  sel.value = selected || "";
+  $("#f-notation").placeholder = PLACEHOLDER[g.style];
+  $("#notationHint").textContent = LEGEND[g.style];
+}
+function syncComboFields() { $("#comboFields").hidden = $("#f-type").value !== "combo"; }
+
+function openEdit(e) {
+  state.editingId = e ? e.id : null;
+  $("#editTitle").textContent = e ? "Editar entrada" : "Nueva entrada";
+  F.forEach((k) => { $("#f-" + k).value = e && e[k] != null ? e[k] : ""; });
+  const g = e ? gameOf(e) : gameById(state.route.game);
+  const gid = (g || GAMES[0]).id;
+  $("#f-game").value = gid;
+  fillChars(gid, e ? e.character : (state.route.char || ""));
+  if (!e) {
+    $("#f-type").value = state.type !== "all" ? state.type : (state.route.char ? "combo" : "tip");
+    $("#f-difficulty").value = "1";
+  }
+  $("#formErr").hidden = true;
+  syncComboFields();
+  $("#editDlg").showModal();
+}
+
+$("#f-game").addEventListener("change", (ev) => fillChars(ev.target.value, ""));
+$("#f-type").addEventListener("change", syncComboFields);
+document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
+$("#addBtn").addEventListener("click", () => openEdit(null));
+$("#homeLink").addEventListener("click", () => go(null));
+
+$("#editForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  if (!db) return;
+  const data = {};
+  F.forEach((k) => { data[k] = $("#f-" + k).value.trim(); });
+  data.game = gameById($("#f-game").value).name;
+  data.character = $("#f-character").value;
+  if (data.type !== "combo") { delete data.notation; delete data.damage; delete data.difficulty; delete data.meter; }
+  else data.difficulty = Number(data.difficulty) || 1;
+  Object.keys(data).forEach((k) => { if (data[k] === "") delete data[k]; });
+  const prev = state.entries.find((x) => x.id === state.editingId);
+  data.createdAt = prev ? prev.createdAt : new Date().toISOString();
+  data.updatedAt = new Date().toISOString();
+  const btn = $("#saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+  try {
+    const col = db.collection("entries");
+    await (state.editingId ? col.doc(state.editingId) : col.doc()).set(data);
+    $("#editDlg").close();
+  } catch (err) {
+    const msg = $("#formErr");
+    msg.textContent = err && err.code === "quota_exceeded"
+      ? "El dojo llegó al límite de entradas. Eliminá alguna y volvé a intentar."
+      : "No se pudo guardar. Revisá que tengas permiso de edición y volvé a intentar.";
+    msg.hidden = false;
+  } finally { btn.disabled = false; btn.textContent = "Guardar"; }
+});
+
+/* ---------- Boot ---------- */
+const initial = routeFromHash();
+state.route = { game: initial.game, char: initial.char };
+render();
+
+(async () => {
+  const claude = window.claude;
+  if (!claude || !claude.use) { state.offline = true; render(); return; }
+  const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  state.canEdit = user ? await user.canEdit() : false;
+  $("#addBtn").hidden = !state.canEdit;
+  db = dbNs;
+  if (!db) { state.offline = true; render(); return; }
+  db.collection("entries").limit(1000).onSnapshot((snap) => {
+    state.entries = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    // a deep link to a fighter added by hand (not in the built-in roster) resolves once entries arrive
+    if (initial.pendingSlug && state.route.char == null) {
+      const g = gameById(initial.game);
+      const c = charsOf(g).find((n) => slug(n) === initial.pendingSlug);
+      if (c) state.route.char = c;
+      initial.pendingSlug = null;
+    }
+    state.loaded = true;
+    if (!document.activeElement || document.activeElement.id !== "q") render();
+  }, () => { state.offline = true; state.loaded = false; render(); });
+})();
+</script>
+
+</body></html>
