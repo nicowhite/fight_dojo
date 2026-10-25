@@ -28,6 +28,8 @@
   --btn-x: #7fd67a;
   --chip-ink: #170d0e;
   --danger: #ff6b6b;
+  --panel: #5e1a20;
+  --screen: #070304;
   --f-arcade: "Press Start 2P", "Courier New", monospace; /* no accented capitals: only for unaccented labels */
   --f-display: "Pixelify Sans", "Arial Narrow", Impact, sans-serif;
   --f-body: "Archivo", "Segoe UI", system-ui, sans-serif;
@@ -97,12 +99,45 @@ section { display: grid; gap: 14px; min-width: 0; }
 .search input:focus { border-color: var(--gold); outline: none; }
 
 /* Game select */
-.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.game-card { position: relative; overflow: hidden; text-align: left; border: 0; cursor: pointer; background: var(--surface); padding: 22px 22px 30px; min-height: 200px; display: grid; align-content: end; gap: 6px; box-shadow: var(--bevel); transition: background-color .15s, transform .15s; }
+/* Arcade cabinet: marquee, screen with the three games, control panel, coin door */
+.cabinet { width: min(840px, 100%); margin: 0 auto; display: grid; }
+.marquee { position: relative; z-index: 1; margin-inline: 10px; padding: 14px 16px 12px; text-align: center; color: var(--gold-ink);
+  background: conic-gradient(rgb(255 255 255 / .14) 25%, transparent 0 50%, rgb(255 255 255 / .14) 0 75%, transparent 0) 0 0 / 8px 8px, var(--gold);
+  box-shadow: var(--bevel); filter: drop-shadow(0 0 18px rgb(255 182 39 / .35)); }
+.marquee h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 5vw, 40px); line-height: 1; text-transform: uppercase; text-shadow: 3px 3px 0 rgb(255 255 255 / .35); }
+.cab-body { background: var(--surface); padding: 18px 18px 0; display: grid; gap: 0; box-shadow: var(--bevel); }
+.bezel { background: #000; padding: 14px; box-shadow: inset 0 0 0 var(--px) var(--line); }
+.screen { display: grid; gap: 12px; padding: 16px; background: radial-gradient(ellipse at center, #1a0d0f 0, var(--screen) 75%); box-shadow: inset 0 0 40px rgb(255 182 39 / .07); min-width: 0; }
+.screen-foot { margin: 0; display: flex; justify-content: space-between; gap: 4px 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 21px; line-height: 1; color: var(--muted); }
+.screen-foot b { font-weight: 400; color: var(--gold); text-transform: uppercase; }
+.panel { margin: 18px -8px 0; padding: 22px 34px 26px; background: linear-gradient(to bottom, rgb(255 255 255 / .06) 0 var(--px), transparent var(--px)), var(--panel);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 100%, 0 100%); box-shadow: inset 0 calc(-1 * var(--px)) 0 rgb(0 0 0 / .4);
+  display: flex; align-items: center; justify-content: space-between; gap: 18px 28px; flex-wrap: wrap; }
+.stick-btn { background: none; border: 0; padding: 0; cursor: pointer; line-height: 0; }
+.stick { width: 112px; height: 120px; }
+.pad { display: grid; grid-template-columns: repeat(3, 44px); gap: 10px 14px; }
+.pad span:nth-child(-n+3) { transform: translateY(-6px); }
+.abtn, .start { --b: var(--btn-p); border: 0; background: var(--b); color: var(--chip-ink); box-shadow: inset -3px -4px 0 rgb(0 0 0 / .3), inset 3px 3px 0 rgb(255 255 255 / .35); }
+.abtn { width: 44px; height: 44px; display: grid; place-items: center; font-family: var(--f-mono); font-size: 18px; line-height: 1; cursor: pointer; user-select: none;
+  clip-path: polygon(30% 0, 70% 0, 70% 10%, 90% 10%, 90% 30%, 100% 30%, 100% 70%, 90% 70%, 90% 90%, 70% 90%, 70% 100%, 30% 100%, 30% 90%, 10% 90%, 10% 70%, 0 70%, 0 30%, 10% 30%, 10% 10%, 30% 10%); }
+.abtn.k { --b: var(--btn-k); }
+.abtn:active, .start:active { box-shadow: inset 3px 4px 0 rgb(0 0 0 / .35); }
+.start { --b: var(--fg); padding: 12px 14px 10px; font-family: var(--f-arcade); font-size: 11px; line-height: 1; cursor: pointer; }
+.start:hover { --b: var(--gold); }
+.coin-door { display: flex; justify-content: center; gap: 22px; padding: 18px 0 20px; }
+.slot { width: 46px; height: 58px; background: var(--surface-2); box-shadow: var(--bevel); display: grid; place-items: center; }
+.slot::before { content: ""; width: 6px; height: 22px; background: var(--crimson); box-shadow: 0 0 10px var(--crimson); }
+
+.games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.game-card { position: relative; overflow: hidden; text-align: left; border: 0; cursor: pointer; background: var(--surface); padding: 22px 16px 28px; min-height: 160px; display: grid; align-content: end; gap: 6px; box-shadow: var(--bevel); transition: background-color .15s, transform .15s; }
 .game-card::after { content: ""; position: absolute; left: 0; right: 0; bottom: var(--px); height: 8px; background: repeating-linear-gradient(90deg, var(--gc) 0 12px, transparent 12px 16px); }
-.game-card:hover { background: var(--surface-hi); transform: translateY(-3px); }
-.game-card .ghost-txt { position: absolute; right: 10px; top: 16px; font-family: var(--f-arcade); font-size: 56px; line-height: 1; color: var(--gc); opacity: .16; text-shadow: 6px 6px 0 rgb(0 0 0 / .6); pointer-events: none; }
-.game-card .gname { position: relative; font-family: var(--f-display); font-weight: 700; font-size: 30px; line-height: 1; text-transform: uppercase; }
+.game-card:hover { transform: translateY(-3px); }
+.game-card { opacity: .62; }
+.game-card.sel { opacity: 1; background: var(--surface-hi); box-shadow: inset 0 0 0 var(--px) var(--gc), var(--bevel); }
+.game-card .cursor { position: absolute; left: 14px; top: 14px; font-family: var(--f-arcade); font-size: 11px; color: var(--gc); visibility: hidden; }
+.game-card.sel .cursor { visibility: visible; animation: blink 1s steps(1) infinite; }
+.game-card .ghost-txt { position: absolute; right: 10px; top: 14px; font-family: var(--f-arcade); font-size: 40px; line-height: 1; color: var(--gc); opacity: .16; text-shadow: 6px 6px 0 rgb(0 0 0 / .6); pointer-events: none; }
+.game-card .gname { position: relative; font-family: var(--f-display); font-weight: 700; font-size: 25px; line-height: 1; text-transform: uppercase; }
 .game-card .gmeta { position: relative; font-family: var(--f-mono); font-size: 17px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .game-card .gmeta b { color: var(--gc); }
 
@@ -204,9 +239,18 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
 
 @media (max-width: 640px) {
   .duel { display: none; }
+  .games { grid-template-columns: 1fr; }
+  .game-card { min-height: 110px; padding-top: 34px; }
+  .cab-body { padding-inline: 10px; }
+  .bezel { padding: 8px; }
+  .screen { padding: 10px; }
+  .panel { padding: 18px 24px 20px; justify-content: center; }
+  .stick { width: 84px; height: 90px; }
+  .pad { grid-template-columns: repeat(3, 36px); gap: 8px 10px; }
+  .abtn { width: 36px; height: 36px; font-size: 16px; }
   .roster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
-@media (prefers-reduced-motion: reduce) { .card, .card::after, .fighter, .game-card { transition: none; } .duel canvas, .duel span, footer .wrap::after { animation: none; } .card:hover, .fighter:hover, .game-card:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card, .card::after, .fighter, .game-card { transition: none; } .duel canvas, .duel span, footer .wrap::after, .game-card.sel .cursor { animation: none; } .card:hover, .fighter:hover, .game-card:hover { transform: none; } }
 </style>
 
 <header class="band">
@@ -299,8 +343,9 @@ const LEGEND = {
   mk: "Notación MK1: 1 puño frontal, 2 puño trasero, 3 patada frontal, 4 patada trasera. F/B/D/U direcciones, por ejemplo B2 o D1. Coma separa golpes de una cadena.",
 };
 
-const state = { entries: [], route: { game: null, char: null }, type: "all", q: "", canEdit: false, loaded: false, offline: false, editingId: null };
+const state = { entries: [], route: { game: null, char: null }, homeSel: 0, type: "all", q: "", canEdit: false, loaded: false, offline: false, editingId: null };
 let db = null;
+let homeNav = null;   // set while the home cabinet is on screen
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -371,6 +416,29 @@ function portrait(name, color) {
   const img = el("img", "portrait pixel");
   img.src = portraits.get(key); img.alt = "";
   return img;
+}
+
+// Arcade joystick, 28x30 pixels; dir is n (center), l, r, u or d.
+function drawStick(canvas, dir) {
+  const W = 28, H = 30;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const px = (color, x, y, w = 1, h = 1) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
+  px("#0b0607", 3, 23, 22, 6); px("#3a3335", 4, 23, 20, 4); px("#6a6163", 6, 23, 16, 1);
+  px("#0b0607", 9, 21, 10, 3); px("#2a2426", 10, 21, 8, 2);
+  const [ox, oy] = { n: [0, 0], l: [-6, 2], r: [6, 2], u: [0, -2], d: [0, 3] }[dir] || [0, 0];
+  const bx = 14 + ox, by = 8 + oy;
+  for (let y = by; y <= 21; y++) {
+    const sx = Math.round(14 + (bx - 14) * (21 - y) / (21 - by));
+    px("#0b0607", sx - 2, y, 4, 1); px("#b9b0ad", sx - 1, y, 1, 1); px("#7d7472", sx, y, 1, 1);
+  }
+  const ball = cssVar("--crimson");
+  for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) {
+    const r2 = dx * dx + dy * dy;
+    if (r2 > 34) continue;
+    const c = r2 > 22 ? "#0b0607" : (dx < -1 && dy < -1 && r2 < 14) ? "#ffc2c6" : dx + dy > 3 ? "#8f1820" : ball;
+    px(c, bx + dx, by + dy);
+  }
 }
 
 function drawDuel() {
@@ -554,22 +622,75 @@ function loadingOr(grid) {
 /* ---------- Views ---------- */
 function viewHome(root) {
   const games = el("section");
-  const h = el("div", "sec-h"); h.append(el("h2", null, "Elegí tu juego"));
-  games.append(h);
+  const cab = el("div", "cabinet");
+  const marquee = el("div", "marquee cut"); marquee.append(el("h2", null, "Elegí tu juego"));
   const row = el("div", "games");
-  for (const g of GAMES) {
+  const cards = GAMES.map((g, i) => {
     const n = entriesFor(g, null).length;
     const b = el("button", "game-card cut");
     b.type = "button";
     b.style.setProperty("--gc", `var(${g.accent})`);
-    b.append(el("span", "ghost-txt", g.short), el("span", "gname", g.name));
+    b.append(el("span", "cursor", "P1"), el("span", "ghost-txt", g.short), el("span", "gname", g.name));
     const m = el("span", "gmeta");
     m.append(`${g.roster.length} personajes · `, el("b", null, String(n)), ` ${n === 1 ? "entrada" : "entradas"}`);
     b.append(m);
+    b.addEventListener("mouseenter", () => pick(i));
+    b.addEventListener("focus", () => pick(i));
     b.onclick = () => go(g.id, null);
     row.append(b);
+    return b;
+  });
+  const foot = el("p", "screen-foot");
+  const selName = el("b");
+  foot.append(selName, el("span", null, "Mové el stick y apretá START"));
+  const screen = el("div", "screen"); screen.append(row, foot);
+  const bezel = el("div", "bezel"); bezel.append(screen);
+
+  const stickBtn = el("button", "stick-btn"); stickBtn.type = "button";
+  stickBtn.setAttribute("aria-label", "Stick: tocá a la izquierda o a la derecha para cambiar de juego");
+  const stick = el("canvas", "stick pixel");
+  stickBtn.append(stick);
+  stickBtn.onclick = (ev) => {
+    const r = stickBtn.getBoundingClientRect();
+    const left = ev.detail && ev.clientX < r.left + r.width / 2;
+    move(left ? -1 : 1, left ? "l" : "r");
+  };
+  const pad = el("div", "pad"); pad.setAttribute("aria-hidden", "true");
+  ["LP", "MP", "HP", "LK", "MK", "HK"].forEach((t, i) => pad.append(el("span", "abtn " + (i < 3 ? "p" : "k"), t)));
+  const start = el("button", "start", "START"); start.type = "button";
+  start.onclick = () => go(GAMES[state.homeSel].id, null);
+  const panel = el("div", "panel"); panel.append(stickBtn, pad, start);
+  const door = el("div", "coin-door"); door.setAttribute("aria-hidden", "true");
+  door.append(el("span", "slot"), el("span", "slot"));
+  const body = el("div", "cab-body"); body.append(bezel, panel, door);
+  cab.append(marquee, body);
+  games.append(cab);
+
+  // The stick leans toward the newly selected game, then springs back to center.
+  let springBack;
+  function pick(i, dir) {
+    const prev = state.homeSel;
+    if (i !== prev) {
+      if (!dir) {
+        const a = cards[prev].getBoundingClientRect(), b = cards[i].getBoundingClientRect();
+        const dx = b.left - a.left, dy = b.top - a.top;
+        dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "r" : "l") : (dy > 0 ? "d" : "u");
+      }
+      drawStick(stick, dir);
+      clearTimeout(springBack);
+      springBack = setTimeout(() => drawStick(stick, "n"), 220);
+    }
+    state.homeSel = i;
+    cards.forEach((c, j) => c.classList.toggle("sel", j === i));
+    selName.textContent = `P1 ▶ ${GAMES[i].name}`;
   }
-  games.append(row);
+  function move(delta, dir) {
+    pick((state.homeSel + delta + GAMES.length) % GAMES.length, dir);
+    if (cab.contains(document.activeElement) && document.activeElement !== stickBtn) cards[state.homeSel].focus({ preventScroll: true });
+  }
+  homeNav = { move, inside: (n) => cab.contains(n) };
+  drawStick(stick, "n");
+  pick(state.homeSel);
 
   const find = el("section");
   const fh = el("div", "sec-h"); fh.append(el("h2", null, "Buscar personaje"));
@@ -673,6 +794,7 @@ function viewChar(root, g, c) {
 function render() {
   const root = $("#view");
   root.textContent = "";
+  homeNav = null;
   const g = gameById(state.route.game);
   if (!g) viewHome(root);
   else if (state.route.char == null) viewGame(root, g);
@@ -778,6 +900,18 @@ $("#f-type").addEventListener("change", syncComboFields);
 document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
 $("#addBtn").addEventListener("click", () => openEdit(null));
 $("#homeLink").addEventListener("click", () => go(null));
+
+// Joystick on the keyboard: left/right anywhere on the home screen, up/down too while inside the cabinet.
+document.addEventListener("keydown", (ev) => {
+  if (!homeNav || document.querySelector("dialog[open]") || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+  const t = ev.target;
+  if (t.closest && t.closest("input, textarea, select")) return;
+  const KEYS = { ArrowLeft: [-1, "l"], ArrowRight: [1, "r"], ArrowUp: [-1, "u"], ArrowDown: [1, "d"] };
+  const k = KEYS[ev.key];
+  if (!k || (k[1] === "u" || k[1] === "d") && !homeNav.inside(t)) return;
+  ev.preventDefault();
+  homeNav.move(k[0], k[1]);
+});
 
 $("#editForm").addEventListener("submit", async (ev) => {
   ev.preventDefault();
