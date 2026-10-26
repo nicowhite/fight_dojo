@@ -156,6 +156,14 @@ section { display: grid; gap: 14px; min-width: 0; }
 .fighter.has .fcount { color: var(--gc); }
 .fighter .fgame { font-family: var(--f-mono); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .fighter.general { background: var(--surface-2); outline: 2px dashed var(--line); outline-offset: -6px; }
+/* Official portraits: Tekken and MK1 are busts, cropped from the top; SF6 renders are full body, shown whole. */
+.fighter .frame { display: block; margin: -4px -6px 6px; aspect-ratio: 5 / 6; overflow: hidden; background: radial-gradient(ellipse at 50% 75%, color-mix(in srgb, var(--gc) 32%, transparent), transparent 70%), #000; box-shadow: inset 0 0 0 2px var(--line); }
+.fighter:hover .frame, .fighter:focus-visible .frame { box-shadow: inset 0 0 0 2px var(--gc); }
+.fighter .pic { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; transition: transform .2s; }
+.fighter .pic[data-game="sf6"], .hero-pic[data-game="sf6"] { object-fit: contain; object-position: 50% 100%; }
+.fighter:hover .pic { transform: scale(1.05); }
+.char-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 16px; }
+.hero-pic { width: clamp(120px, 24vw, 230px); aspect-ratio: 5 / 6; object-fit: cover; object-position: 50% 0; background: radial-gradient(ellipse at 50% 75%, color-mix(in srgb, var(--gc) 38%, transparent), transparent 70%), #000; border-bottom: var(--px) solid var(--gc); box-shadow: var(--bevel); }
 
 /* Type tabs */
 .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 2px 6px; }
@@ -235,6 +243,7 @@ form.dlg textarea { min-height: 160px; resize: vertical; line-height: 1.5; }
 
 footer { border-top: var(--px) solid var(--line); }
 footer .wrap { padding-block: 18px 28px; color: var(--muted); font-family: var(--f-mono); font-size: 19px; line-height: 1.3; }
+footer .credits { margin: 10px 0 0; font-family: var(--f-body); font-size: 12px; line-height: 1.5; }
 footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; font-family: var(--f-arcade); font-size: 10px; color: var(--gold); animation: blink 1.2s steps(1) infinite; }
 
 @media (max-width: 640px) {
@@ -266,7 +275,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
 
 <main class="wrap" id="view"></main>
 
-<footer><div class="wrap" id="legend"></div></footer>
+<footer><div class="wrap"><div id="legend"></div><p class="credits">Sitio de fans sin fines de lucro, no oficial. Imágenes de personajes: © Capcom (Street Fighter 6), © Bandai Namco Entertainment (Tekken 8), © Warner Bros. Games / NetherRealm Studios (Mortal Kombat 1).</p></div></footer>
 
 <dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
 
@@ -321,11 +330,11 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
 /* ---------- Games and rosters ---------- */
 const GAMES = [
   { id: "sf6", short: "SF6", name: "Street Fighter 6", accent: "--gold", style: "numpad", aliases: ["Street Fighter"],
-    roster: ["A.K.I.", "Akuma", "Alex", "Blanka", "C. Viper", "Cammy", "Chun-Li", "Dee Jay", "Dhalsim", "E. Honda", "Ed", "Elena", "Guile", "Ingrid", "Jamie", "JP", "Juri", "Ken", "Kimberly", "Lily", "Luke", "M. Bison", "Mai", "Manon", "Marisa", "Rashid", "Ryu", "Sagat", "Terry", "Zangief"] },
+    roster: ["A.K.I.", "Akuma", "Alex", "Arjun", "Blanka", "C. Viper", "Cammy", "Chun-Li", "Dee Jay", "Dhalsim", "E. Honda", "Ed", "Elena", "Guile", "Ingrid", "Jamie", "JP", "Juri", "Ken", "Kimberly", "Lily", "Luke", "M. Bison", "Mai", "Manon", "Marisa", "Rashid", "Ryu", "Sagat", "Terry", "Yasmine", "Zangief"] },
   { id: "t8", short: "T8", name: "Tekken 8", accent: "--crimson", style: "tekken", aliases: ["Tekken"],
-    roster: ["Alisa", "Anna", "Armor King", "Asuka", "Azucena", "Bryan", "Claudio", "Clive", "Devil Jin", "Dragunov", "Eddy", "Fahkumram", "Feng", "Heihachi", "Hwoarang", "Jack-8", "Jin", "Jun", "Kazuya", "King", "Kuma", "Lars", "Law", "Lee", "Leo", "Leroy", "Lidia", "Lili", "Nina", "Panda", "Paul", "Raven", "Reina", "Shaheen", "Steve", "Victor", "Xiaoyu", "Yoshimitsu", "Zafina"] },
+    roster: ["Alisa", "Anna", "Armor King", "Asuka", "Azucena", "Bob", "Bryan", "Claudio", "Clive", "Devil Jin", "Dragunov", "Eddy", "Fahkumram", "Feng", "Heihachi", "Hwoarang", "Jack-8", "Jin", "Jun", "Kazuya", "King", "Kuma", "Kunimitsu", "Lars", "Law", "Lee", "Leo", "Leroy", "Lidia", "Lili", "Miary Zo", "Nina", "Panda", "Paul", "Raven", "Reina", "Roger Jr.", "Shaheen", "Steve", "Victor", "Xiaoyu", "Yoshimitsu", "Zafina"] },
   { id: "mk1", short: "MK1", name: "Mortal Kombat 1", accent: "--jade", style: "mk", aliases: ["Mortal Kombat"],
-    roster: ["Ashrah", "Baraka", "Conan", "Cyrax", "Ermac", "General Shao", "Geras", "Ghostface", "Havik", "Homelander", "Johnny Cage", "Kenshi", "Kitana", "Kung Lao", "Li Mei", "Liu Kang", "Mileena", "Nitara", "Noob Saibot", "Omni-Man", "Peacemaker", "Quan Chi", "Raiden", "Rain", "Reptile", "Scorpion", "Sektor", "Shang Tsung", "Sindel", "Smoke", "Sub-Zero", "T-1000", "Takeda", "Tanya"] },
+    roster: ["Ashrah", "Baraka", "Conan", "Cyrax", "Ermac", "General Shao", "Geras", "Ghostface", "Havik", "Homelander", "Johnny Cage", "Kenshi", "Kitana", "Kung Lao", "Li Mei", "Liu Kang", "Mileena", "Nitara", "Noob Saibot", "Omni-Man", "Peacemaker", "Quan Chi", "Raiden", "Rain", "Reiko", "Reptile", "Scorpion", "Sektor", "Shang Tsung", "Sindel", "Smoke", "Sub-Zero", "T-1000", "Takeda", "Tanya"] },
 ];
 const GENERAL = "";   // entries with no character belong to the whole game
 
@@ -359,6 +368,18 @@ const charsOf = (g) => {
 };
 const entriesFor = (g, c) => state.entries.filter((e) => gameOf(e) === g && (c == null || (e.character || GENERAL) === c));
 const ytLink = (u) => /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(u || "");
+// Official portraits ship with the page as portraits/<game>-<slug>.png, one per built-in roster name.
+const PHOTO_KEYS = new Set(GAMES.flatMap((g) => g.roster.map((c) => `${g.id}-${slug(c)}`)));
+function photoImg(g, name, cls) {
+  const key = `${g.id}-${slug(name)}`;
+  if (!PHOTO_KEYS.has(key)) return null;
+  const img = el("img", cls);
+  img.src = `portraits/${key}.png`;
+  img.alt = "";
+  img.decoding = "async";
+  img.dataset.game = g.id;
+  return img;
+}
 
 /* ---------- Pixel art ---------- */
 // Sprites are strings, one char per pixel ("." is transparent); pal maps chars to colors.
@@ -575,7 +596,17 @@ function fighterTile(g, name, showGame) {
     const star = el("img", "portrait pixel"); star.alt = "";
     star.src = drawSprite(document.createElement("canvas"), STAR, { y: cssVar(g.accent) }).toDataURL();
     b.append(star);
-  } else b.append(portrait(name, cssVar(g.accent)));
+  } else {
+    // the official portrait, falling back to the pixel face for hand-added fighters or a missing file
+    const pic = photoImg(g, name, "pic");
+    if (pic) {
+      pic.loading = "lazy";
+      const frame = el("span", "frame");
+      pic.onerror = () => frame.replaceWith(portrait(name, cssVar(g.accent)));
+      frame.append(pic);
+      b.append(frame);
+    } else b.append(portrait(name, cssVar(g.accent)));
+  }
   if (showGame) b.append(el("span", "fgame", g.short));
   b.append(el("span", "fname", name === GENERAL ? "General del juego" : name));
   b.append(el("span", "fcount", n ? `${n} ${n === 1 ? "entrada" : "entradas"}` : "Sin entradas"));
@@ -616,7 +647,7 @@ function emptyBox(title, text) {
 function loadingOr(grid) {
   if (state.loaded) return false;
   grid.append(emptyBox(state.offline ? "No se pudo cargar el contenido" : "Cargando el dojo…",
-    state.offline ? "Esta vista no tiene acceso a la base de datos. Abrí la página desde claude.ai con tu sesión iniciada." : "Trayendo combos, tips, tutoriales y lore."));
+    state.offline ? "Revisá tu conexión y volvé a cargar la página." : "Trayendo combos, tips, tutoriales y lore."));
   return true;
 }
 
@@ -764,7 +795,15 @@ function viewChar(root, g, c) {
   const title = el("h1", "big-name");
   title.append(c === GENERAL ? "General" : c);
   const sub = el("div", "sec-h"); sub.append(el("span", "note", c === GENERAL ? `Tips, tutoriales y lore de ${g.name} que no son de un personaje` : g.name));
-  head.append(title, sub);
+  const hero = c === GENERAL ? null : photoImg(g, c, "hero-pic");
+  if (hero) {
+    const row = el("div", "char-hero");
+    const txt = el("div");
+    txt.append(title, sub);
+    hero.onerror = () => hero.remove();
+    row.append(txt, hero);
+    head.append(row);
+  } else head.append(title, sub);
 
   const tabs = el("nav", "tabs");
   tabs.setAttribute("role", "tablist");
@@ -947,14 +986,28 @@ const initial = routeFromHash();
 state.route = { game: initial.game, char: initial.char };
 render();
 
+// Read-only copy of the entries, published next to the page: what visitors without a Claude
+// session (or the GitHub Pages copy of the site) see instead of the live database.
+async function loadStatic() {
+  try {
+    const res = await fetch("entries.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status);
+    const list = await res.json();
+    state.entries = list.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    state.loaded = true;
+    state.offline = false;
+  } catch { state.offline = true; state.loaded = false; }
+  render();
+}
+
 (async () => {
   const claude = window.claude;
-  if (!claude || !claude.use) { state.offline = true; render(); return; }
+  if (!claude || !claude.use) { loadStatic(); return; }
   const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
   state.canEdit = user ? await user.canEdit() : false;
   $("#addBtn").hidden = !state.canEdit;
   db = dbNs;
-  if (!db) { state.offline = true; render(); return; }
+  if (!db) { loadStatic(); return; }
   db.collection("entries").limit(1000).onSnapshot((snap) => {
     state.entries = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
@@ -967,7 +1020,7 @@ render();
     }
     state.loaded = true;
     if (!document.activeElement || document.activeElement.id !== "q") render();
-  }, () => { state.offline = true; state.loaded = false; render(); });
+  }, () => { loadStatic(); });
 })();
 </script>
 
