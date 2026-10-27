@@ -252,7 +252,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
   background: radial-gradient(ellipse at 50% 60%, #1a0d0f 0, var(--screen) 70%); transition: opacity .4s; }
 #intro.out { opacity: 0; pointer-events: none; }
 #intro .logo { font-size: clamp(26px, 7vw, 56px); }
-#intro canvas { width: min(100%, 960px); aspect-ratio: 200 / 72; height: auto; }
+#intro canvas { width: min(100%, 960px); aspect-ratio: 400 / 150; height: auto; }
 #intro .prompt { font-family: var(--f-arcade); font-size: clamp(12px, 2.4vw, 18px); color: var(--gold); text-shadow: 3px 3px 0 #000; animation: blink 1s steps(1) infinite; background: none; border: 0; cursor: pointer; padding: 8px; }
 #intro .hint { margin: -12px 0 0; font-family: var(--f-mono); font-size: 20px; color: var(--muted); }
 #intro .skip { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: none; border: 0; cursor: pointer; font-family: var(--f-mono); font-size: 20px; color: var(--muted); text-decoration: underline; }
@@ -289,7 +289,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
 
 <main class="wrap" id="view"></main>
 
-<footer><div class="wrap"><div id="legend"></div><p class="credits">Sitio de fans sin fines de lucro, no oficial. Imágenes de personajes: © Capcom (Street Fighter 6), © Bandai Namco Entertainment (Tekken 8), © Warner Bros. Games / NetherRealm Studios (Mortal Kombat 1).</p></div></footer>
+<footer><div class="wrap"><div id="legend"></div><p class="credits">Sitio de fans sin fines de lucro, no oficial. Imágenes de personajes, ilustración y voz de la intro: © Capcom (Street Fighter 6 y Street Fighter III: 3rd Strike), © Bandai Namco Entertainment (Tekken 8), © Warner Bros. Games / NetherRealm Studios (Mortal Kombat 1).</p></div></footer>
 
 <dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
 
@@ -995,85 +995,23 @@ $("#editForm").addEventListener("submit", async (ev) => {
 });
 
 // ---------- Intro: Hadoken ----------
-// Ryu for the intro, drawn from a jointed skeleton instead of a fixed sprite, so poses blend smoothly.
-// Points are pixels from the spot between his feet: x forward, negative y up.
+// Ryu for the intro: the owner's Third Strike artwork (images/ryu-intro.png), animated as a whole figure.
+// Each pose is a transform around the point between his feet: lean (radians), shift (px), and stretch.
+const RYU_IMG = new Image();
+RYU_IMG.src = "images/ryu-intro.png";
+const RYU_FIST = [0.837, 0.299];   // front glove, as a fraction of the image
 const RYU_POSES = {
-  guard: { hip: [0, -27], chest: [3, -42], head: [5, -50],
-    elbowB: [5, -33], handB: [11, -38], elbowF: [12, -35], handF: [18, -42],
-    kneeB: [-9, -15], ankleB: [-13, -2], toeB: [-9, 0], kneeF: [10, -15], ankleF: [11, -2], toeF: [16, 0] },
-  charge: { hip: [-1, -26], chest: [-2, -41], head: [-1, -49],
-    elbowB: [-8, -34], handB: [-6, -27], elbowF: [-5, -35], handF: [-3, -28],
-    kneeB: [-11, -14], ankleB: [-15, -2], toeB: [-11, 0], kneeF: [10, -14], ankleF: [12, -2], toeF: [17, 0] },
-  push: { hip: [3, -25], chest: [9, -40], head: [12, -48],
-    elbowB: [17, -36], handB: [26, -35], elbowF: [19, -38], handF: [28, -38],
-    kneeB: [-8, -13], ankleB: [-17, -2], toeB: [-13, 0], kneeF: [14, -15], ankleF: [16, -2], toeF: [21, 0] },
+  guard:  { rot: 0, dx: 0, sx: 1, sy: 1 },
+  charge: { rot: -0.09, dx: -5, sx: 0.98, sy: 0.96 },
+  push:   { rot: 0.12, dx: 10, sx: 1.04, sy: 0.98 },
 };
-const RYU_COL = { gi: "#f2ead8", giShade: "#c4b59c", skin: "#e8a77a", skinShade: "#b97650", belt: "#16100f",
-  band: "#d8262f", hair: "#3a2015", glove: "#b8222a", eye: "#0b0607" };
 const ease = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
 function blendPose(a, b, k) {
   const out = {};
-  for (const j in a) out[j] = [a[j][0] + (b[j][0] - a[j][0]) * k, a[j][1] + (b[j][1] - a[j][1]) * k];
+  for (const key in a) out[key] = a[key] + (b[key] - a[key]) * k;
   return out;
 }
 
-const RYU_W = 90, RYU_H = 72, RYU_OX = 34, RYU_OY = 70;
-const ryuCanvas = document.createElement("canvas");
-ryuCanvas.width = RYU_W; ryuCanvas.height = RYU_H;
-const RYU_UPPER = new Set(["hip", "chest", "head", "elbowB", "handB", "elbowF", "handF"]);
-
-// bob lowers the upper body by a pixel or two for the guard bounce.
-function drawRyu(pose, now, bob) {
-  const c = ryuCanvas.getContext("2d", { willReadFrequently: true });
-  c.clearRect(0, 0, RYU_W, RYU_H);
-  const pt = (j) => [RYU_OX + pose[j][0], RYU_OY + pose[j][1] + (RYU_UPPER.has(j) ? bob : j.startsWith("knee") ? bob / 2 : 0)];
-  const seg = (a, b, w, col) => { c.strokeStyle = col; c.lineWidth = w; c.lineCap = "round"; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); };
-  const dot = (p, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(p[0], p[1], r, 0, Math.PI * 2); c.fill(); };
-  const hip = pt("hip"), chest = pt("chest"), head = pt("head");
-
-  // back leg and arm, shaded because they sit behind the body
-  seg(hip, pt("kneeB"), 8, RYU_COL.giShade); seg(pt("kneeB"), pt("ankleB"), 7, RYU_COL.giShade); seg(pt("ankleB"), pt("toeB"), 3, RYU_COL.skinShade);
-  seg(chest, pt("elbowB"), 5, RYU_COL.skinShade); seg(pt("elbowB"), pt("handB"), 4, RYU_COL.skinShade); dot(pt("handB"), 2.6, RYU_COL.glove);
-
-  // torso, the open collar of the gi, and the black belt with its knot swinging
-  seg(hip, chest, 13, RYU_COL.gi);
-  c.fillStyle = RYU_COL.skin; c.beginPath();
-  c.moveTo(chest[0] - 2, chest[1] - 2); c.lineTo(chest[0] + 4, chest[1] - 2);
-  c.lineTo(chest[0] + 1 + (hip[0] - chest[0]) * 0.35, chest[1] + (hip[1] - chest[1]) * 0.35); c.fill();
-  const ang = Math.atan2(chest[1] - hip[1], chest[0] - hip[0]) + Math.PI / 2, bx = Math.cos(ang) * 6, by = Math.sin(ang) * 6;
-  const waist = [hip[0] + (chest[0] - hip[0]) * 0.12, hip[1] + (chest[1] - hip[1]) * 0.12];
-  seg([waist[0] - bx, waist[1] - by], [waist[0] + bx, waist[1] + by], 3, RYU_COL.belt);
-  seg([waist[0] + 2, waist[1]], [waist[0] + 1 + Math.sin(now / 180), waist[1] + 6], 2, RYU_COL.belt);
-
-  // head: hair, face, eye, and the headband with both tails waving
-  dot([head[0] - 1, head[1] - 1], 5.5, RYU_COL.hair);
-  dot([head[0] + 1, head[1] + 1], 4.5, RYU_COL.skin);
-  seg([head[0] - 5, head[1] - 2], [head[0] + 5, head[1] - 2], 2, RYU_COL.band);
-  for (let k = 0; k < 2; k++) {
-    c.strokeStyle = RYU_COL.band; c.lineWidth = 1.6; c.lineCap = "round"; c.beginPath();
-    const sx = head[0] - 5, sy = head[1] - 2;
-    c.moveTo(sx, sy);
-    for (let i = 1; i <= 4; i++) c.lineTo(sx - i * 3.2, sy + i * 0.9 + k * 1.6 + Math.sin(now / 110 + i * 0.9 + k) * 1.4);
-    c.stroke();
-  }
-  c.fillStyle = RYU_COL.eye; c.fillRect(Math.round(head[0] + 3), Math.round(head[1]), 1, 1);
-
-  // front leg, then the front arm: torn sleeve at the shoulder, bare arm, red glove
-  seg(hip, pt("kneeF"), 8, RYU_COL.gi); seg(pt("kneeF"), pt("ankleF"), 7, RYU_COL.gi); seg(pt("ankleF"), pt("toeF"), 3, RYU_COL.skin);
-  dot(chest, 4, RYU_COL.gi);
-  seg(chest, pt("elbowF"), 5, RYU_COL.skin); seg(pt("elbowF"), pt("handF"), 4, RYU_COL.skin); dot(pt("handF"), 2.8, RYU_COL.glove);
-
-  // pixel pass: drop the anti-aliased edges, then wrap the silhouette in a 1px dark outline
-  const img = c.getImageData(0, 0, RYU_W, RYU_H), d = img.data;
-  for (let i = 3; i < d.length; i += 4) d[i] = d[i] > 110 ? 255 : 0;
-  const solid = (x, y) => x >= 0 && y >= 0 && x < RYU_W && y < RYU_H && d[(y * RYU_W + x) * 4 + 3] === 255;
-  const edge = [];
-  for (let y = 0; y < RYU_H; y++) for (let x = 0; x < RYU_W; x++)
-    if (!solid(x, y) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) edge.push((y * RYU_W + x) * 4);
-  for (const i of edge) { d[i] = 11; d[i + 1] = 6; d[i + 2] = 7; d[i + 3] = 255; }
-  c.putImageData(img, 0, 0);
-  return ryuCanvas;
-}
 const FIREBALL = [
   "....oooo....",
   "..oobbbboo..",
@@ -1148,7 +1086,7 @@ function startIntro() {
   const box = el("div"); box.id = "intro";
   box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "Intro de Fight Dojo");
   const logo = el("span", "logo"); logo.append("Fight ", el("span", null, "Dojo"));
-  const cv = el("canvas", "pixel"); cv.width = window.innerWidth < 600 ? 110 : 200; cv.height = 72; cv.setAttribute("aria-hidden", "true");
+  const cv = el("canvas", "pixel"); cv.width = window.innerWidth < 600 ? 220 : 400; cv.height = 150; cv.setAttribute("aria-hidden", "true");
   cv.style.aspectRatio = `${cv.width} / ${cv.height}`;   // narrow screens get a shorter stage, so Ryu draws bigger
   const shout = el("div", "shout", "HADOKEN!"); shout.setAttribute("aria-hidden", "true");
   const prompt = el("button", "prompt", "PRESS START"); prompt.type = "button";
@@ -1161,38 +1099,52 @@ function startIntro() {
   const ctx = cv.getContext("2d");
   const balls = HADO_PAL.map((pal) => drawSprite(document.createElement("canvas"), FIREBALL, pal));
   loadVoice();
-  const floorY = 68, baseX = cv.width < 160 ? 24 : 40;
+  const floorY = 144, baseX = cv.width < 300 ? 48 : 80, ryuH = 134;
   let raf = 0, t0 = 0, playing = false, done = false;
 
+  // where a point of the image (fractions u, v) lands on the stage for a given pose
+  function ryuPoint(pose, w, u, v) {
+    const lx = (u - 0.5) * w * pose.sx, ly = (v - 1) * ryuH * pose.sy;
+    const c = Math.cos(pose.rot), s = Math.sin(pose.rot);
+    return [baseX + pose.dx + lx * c - ly * s, floorY + lx * s + ly * c];
+  }
   function frame(now) {
     const t = playing ? now - t0 : 0;
     ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.fillStyle = "#2a1719"; ctx.fillRect(0, floorY, cv.width, 2);
-    // guard bounce while waiting; on START: charge back, snap forward, hold the push, settle back to guard
-    let pose, bob = 0;
-    if (!playing) { pose = RYU_POSES.guard; bob = Math.round(1 - Math.cos(now / 260)); }
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = "#2a1719"; ctx.fillRect(0, floorY, cv.width, 3);
+    // breathing in guard; on START: lean back to charge, snap forward, hold, settle back
+    let pose;
+    if (!playing) { const b = (1 - Math.cos(now / 380)) / 2; pose = { rot: 0, dx: 0, sx: 1 + b * 0.012, sy: 1 - b * 0.02 }; }
     else if (t < 420) pose = blendPose(RYU_POSES.guard, RYU_POSES.charge, ease(t / 420));
     else if (t < 520) pose = blendPose(RYU_POSES.charge, RYU_POSES.push, ease((t - 420) / 100));
     else if (t < 1150) pose = RYU_POSES.push;
     else pose = blendPose(RYU_POSES.push, RYU_POSES.guard, ease((t - 1150) / 300));
-    ctx.drawImage(drawRyu(pose, now, bob), baseX - RYU_OX, floorY - RYU_OY);
 
-    if (playing && t < 520) {   // energy gathering between his palms
-      const hx = baseX + (pose.handF[0] + pose.handB[0]) / 2, hy = floorY + (pose.handF[1] + pose.handB[1]) / 2;
-      const size = Math.min(1, 0.3 + t / 450), w = Math.round(12 * size), h = Math.round(9 * size);
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(balls[Math.floor(t / 60) % 2], Math.round(hx - w / 2), Math.round(hy - h / 2), w, h);
+    const w = RYU_IMG.naturalWidth ? Math.round(RYU_IMG.naturalWidth * ryuH / RYU_IMG.naturalHeight) : 0;
+    if (w) {
+      ctx.save();
+      ctx.translate(baseX + pose.dx, floorY);
+      ctx.rotate(pose.rot);
+      ctx.scale(pose.sx, pose.sy);
+      ctx.drawImage(RYU_IMG, -w / 2, -ryuH, w, ryuH);
+      ctx.restore();
+    }
+    const fist = ryuPoint(pose, w || 70, RYU_FIST[0], RYU_FIST[1]);
+    if (playing && t < 520) {   // energy gathering at his fists
+      const k = Math.min(1, 0.3 + t / 450), bw = Math.round(24 * k), bh = Math.round(18 * k);
+      ctx.drawImage(balls[Math.floor(t / 60) % 2], Math.round(fist[0] - bw / 2), Math.round(fist[1] - bh / 2), bw, bh);
     }
     if (playing && t >= 500) {
-      const x0 = baseX + RYU_POSES.push.handF[0] + 1, y = floorY + RYU_POSES.push.handF[1] - 4;
-      const x = Math.round(x0 + (cv.width + 16 - x0) * Math.min(1, (t - 500) / 900));
+      const start = ryuPoint(RYU_POSES.push, w || 70, RYU_FIST[0], RYU_FIST[1]);
+      const x = Math.round(start[0] + (cv.width + 30 - start[0]) * Math.min(1, (t - 500) / 900)), y = Math.round(start[1] - 9);
       for (let i = 1; i <= 4; i++) {   // trail
         ctx.globalAlpha = 0.5 - i * 0.1;
         ctx.fillStyle = "#2f7bff";
-        ctx.fillRect(x - i * 5, y + 2 + (i % 2), 4, 5 - (i % 2) * 2);
+        ctx.fillRect(x - i * 10, y + 4 + (i % 2) * 2, 8, 10 - (i % 2) * 4);
       }
       ctx.globalAlpha = 1;
-      if (x < cv.width + 4) ctx.drawImage(balls[Math.floor(t / 70) % 2], x, y);
+      if (x < cv.width + 8) ctx.drawImage(balls[Math.floor(t / 70) % 2], x, y, 24, 18);
     }
     if (playing && t > 1500 && !done) finish();
     if (!done) raf = requestAnimationFrame(frame);
