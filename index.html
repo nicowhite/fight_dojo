@@ -1008,8 +1008,12 @@ async function loadStatic() {
   $("#addBtn").hidden = !state.canEdit;
   db = dbNs;
   if (!db) { loadStatic(); return; }
-  db.collection("entries").limit(1000).onSnapshot((snap) => {
-    state.entries = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  // One live query per game: the store caps a query at 1000 documents, so this cap applies per game, not to the whole dojo.
+  const perGame = {};
+  let failed = false;
+  const merge = () => {
+    if (failed || Object.keys(perGame).length < GAMES.length) return;
+    state.entries = Object.values(perGame).flat()
       .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
     // a deep link to a fighter added by hand (not in the built-in roster) resolves once entries arrive
     if (initial.pendingSlug && state.route.char == null) {
@@ -1020,7 +1024,13 @@ async function loadStatic() {
     }
     state.loaded = true;
     if (!document.activeElement || document.activeElement.id !== "q") render();
-  }, () => { loadStatic(); });
+  };
+  for (const g of GAMES) {
+    db.collection("entries").where("game", "in", [g.name, ...g.aliases]).limit(1000).onSnapshot((snap) => {
+      perGame[g.id] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      merge();
+    }, () => { if (!failed) { failed = true; loadStatic(); } });
+  }
 })();
 </script>
 
