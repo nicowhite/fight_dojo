@@ -252,7 +252,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
   background: radial-gradient(ellipse at 50% 60%, #1a0d0f 0, var(--screen) 70%); transition: opacity .4s; }
 #intro.out { opacity: 0; pointer-events: none; }
 #intro .logo { font-size: clamp(26px, 7vw, 56px); }
-#intro canvas { width: min(100%, 960px); aspect-ratio: 400 / 150; height: auto; }
+#intro canvas { width: min(100%, 960px); aspect-ratio: 386 / 247; height: auto; }
 #intro .prompt { font-family: var(--f-arcade); font-size: clamp(12px, 2.4vw, 18px); color: var(--gold); text-shadow: 3px 3px 0 #000; animation: blink 1s steps(1) infinite; background: none; border: 0; cursor: pointer; padding: 8px; }
 #intro .hint { margin: -12px 0 0; font-family: var(--f-mono); font-size: 20px; color: var(--muted); }
 #intro .skip { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: none; border: 0; cursor: pointer; font-family: var(--f-mono); font-size: 20px; color: var(--muted); text-decoration: underline; }
@@ -289,7 +289,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
 
 <main class="wrap" id="view"></main>
 
-<footer><div class="wrap"><div id="legend"></div><p class="credits">Sitio de fans sin fines de lucro, no oficial. Imágenes de personajes, ilustración y voz de la intro: © Capcom (Street Fighter 6 y Street Fighter III: 3rd Strike), © Bandai Namco Entertainment (Tekken 8), © Warner Bros. Games / NetherRealm Studios (Mortal Kombat 1).</p></div></footer>
+<footer><div class="wrap"><div id="legend"></div><p class="credits">Sitio de fans sin fines de lucro, no oficial. Imágenes de personajes, animación y voz de la intro: © Capcom (Street Fighter), © Bandai Namco Entertainment (Tekken 8), © Warner Bros. Games / NetherRealm Studios (Mortal Kombat 1).</p></div></footer>
 
 <dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
 
@@ -995,40 +995,17 @@ $("#editForm").addEventListener("submit", async (ev) => {
 });
 
 // ---------- Intro: Hadoken ----------
-// Ryu for the intro: the owner's Third Strike guard animation, as a strip of frames (images/ryu-idle.png).
-// The guard loops the whole time; each pose adds a transform around the point between his feet:
-// lean (radians), shift (px) and stretch.
+// The owner's Hadoken animation, cut from their GIF into one strip (images/ryu-hadoken.png):
+// frames 0-3 are the guard loop, 4-18 the move itself (wind-up, push, fireball crossing).
 const RYU_IMG = new Image();
-RYU_IMG.src = "images/ryu-idle.png";
-const RYU_FRAMES = 13, RYU_FRAME_MS = 60;
-const RYU_FIST = [0.837, 0.315];   // front glove, as a fraction of one frame
-const RYU_POSES = {
-  guard:  { rot: 0, dx: 0, sx: 1, sy: 1 },
-  charge: { rot: -0.09, dx: -5, sx: 0.98, sy: 0.96 },
-  push:   { rot: 0.12, dx: 10, sx: 1.04, sy: 0.98 },
-};
-const ease = (k) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
-function blendPose(a, b, k) {
-  const out = {};
-  for (const key in a) out[key] = a[key] + (b[key] - a[key]) * k;
-  return out;
-}
+RYU_IMG.src = "images/ryu-hadoken.png";
+const RYU_FRAMES = 19, RYU_GUARD = 4, RYU_FRAME_MS = 100;
+// Timeline after START, in ms. The voice starts at 0; its "KEN" lands at about 800 ms, so the
+// wind-up begins at 450 and the push (frame 7) and fireball (frame 8) fall at 750 and 850.
+const HADO_WINDUP = 450, HADO_FIREBALL = 850, HADO_END = HADO_WINDUP + (RYU_FRAMES - RYU_GUARD) * RYU_FRAME_MS + 150;
 
-const FIREBALL = [
-  "....oooo....",
-  "..oobbbboo..",
-  ".obbccccbbo.",
-  "obccwwwwccbo",
-  "obcwwwwwwcbo",
-  "obccwwwwccbo",
-  ".obbccccbbo.",
-  "..oobbbboo..",
-  "....oooo....",
-];
-const HADO_PAL = [{ o: "#0b2a6b", b: "#2f7bff", c: "#8fe3ff", w: "#ffffff" }, { o: "#0b2a6b", b: "#4f9bff", c: "#ffffff", w: "#8fe3ff" }];
-
-// The voice clip is an optional file next to the page (sounds/hadoken.mp3). When it is
-// missing or fails to play, the system's text-to-speech says the move's name instead.
+// The voice is the owner's clip next to the page (sounds/hadoken.mp3). If it is missing or
+// cannot play, a synthesized effect and the system's text-to-speech stand in, on the same timeline.
 const VOICE_URL = "sounds/hadoken.mp3";
 let voiceClip = null;
 function loadVoice() {
@@ -1051,36 +1028,37 @@ function speakHadoken() {
   } catch {}
 }
 
-// Synthesized effect (rising charge, blast and thump) plus the voice.
-function hadokenSound() {
+function synthHadoken() {
   const AC = window.AudioContext || window.webkitAudioContext;
-  if (AC) {
-    try {
-      const ac = new AC(), t = ac.currentTime + 0.02;
-      const tone = (type, f0, f1, at, dur, vol) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = type;
-        o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
-        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-        o.connect(g).connect(ac.destination); o.start(at); o.stop(at + dur + 0.05);
-      };
-      tone("square", 110, 520, t, 0.5, 0.06);
-      const len = Math.floor(ac.sampleRate * 0.9), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-      const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-      n.buffer = buf; f.type = "bandpass"; f.Q.value = 1.1;
-      f.frequency.setValueAtTime(2200, t + 0.5); f.frequency.exponentialRampToValueAtTime(220, t + 1.35);
-      g.gain.setValueAtTime(0.0001, t + 0.5); g.gain.exponentialRampToValueAtTime(0.5, t + 0.56); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
-      n.connect(f).connect(g).connect(ac.destination); n.start(t + 0.5); n.stop(t + 1.45);
-      tone("sine", 140, 40, t + 0.5, 0.45, 0.45);
-      setTimeout(() => ac.close().catch(() => {}), 2000);
-    } catch {}
-  }
-  // the clip starts on the press so its "ken" lands as the fireball leaves (0.5s); the spoken fallback needs a head start less
+  if (!AC) return;
+  try {
+    const ac = new AC(), t = ac.currentTime + 0.02, fire = t + HADO_FIREBALL / 1000;
+    const tone = (type, f0, f1, at, dur, vol) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(g).connect(ac.destination); o.start(at); o.stop(at + dur + 0.05);
+    };
+    tone("square", 110, 520, fire - 0.4, 0.4, 0.06);
+    const len = Math.floor(ac.sampleRate * 0.9), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    n.buffer = buf; f.type = "bandpass"; f.Q.value = 1.1;
+    f.frequency.setValueAtTime(2200, fire); f.frequency.exponentialRampToValueAtTime(220, fire + 0.85);
+    g.gain.setValueAtTime(0.0001, fire); g.gain.exponentialRampToValueAtTime(0.5, fire + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, fire + 0.9);
+    n.connect(f).connect(g).connect(ac.destination); n.start(fire); n.stop(fire + 0.95);
+    tone("sine", 140, 40, fire, 0.45, 0.45);
+    setTimeout(() => ac.close().catch(() => {}), 2500);
+  } catch {}
+}
+
+function hadokenSound() {
+  const fallback = () => { synthHadoken(); setTimeout(speakHadoken, 350); };
   const clip = voiceClip;
-  if (!clip) { setTimeout(speakHadoken, 200); return; }
+  if (!clip) return fallback();
   try { clip.currentTime = 0; } catch {}
-  clip.play().catch(() => setTimeout(speakHadoken, 200));
+  clip.play().catch(fallback);
 }
 
 function startIntro() {
@@ -1088,8 +1066,7 @@ function startIntro() {
   const box = el("div"); box.id = "intro";
   box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "Intro de Fight Dojo");
   const logo = el("span", "logo"); logo.append("Fight ", el("span", null, "Dojo"));
-  const cv = el("canvas", "pixel"); cv.width = window.innerWidth < 600 ? 220 : 400; cv.height = 150; cv.setAttribute("aria-hidden", "true");
-  cv.style.aspectRatio = `${cv.width} / ${cv.height}`;   // narrow screens get a shorter stage, so Ryu draws bigger
+  const cv = el("canvas", "pixel"); cv.width = 386; cv.height = 247; cv.setAttribute("aria-hidden", "true");
   const shout = el("div", "shout", "HADOKEN!"); shout.setAttribute("aria-hidden", "true");
   const prompt = el("button", "prompt", "PRESS START"); prompt.type = "button";
   const hint = el("p", "hint", "Tocá o apretá cualquier tecla. Tiene sonido.");
@@ -1099,58 +1076,23 @@ function startIntro() {
   try { prompt.focus({ preventScroll: true }); } catch {}
 
   const ctx = cv.getContext("2d");
-  const balls = HADO_PAL.map((pal) => drawSprite(document.createElement("canvas"), FIREBALL, pal));
   loadVoice();
-  const floorY = 144, baseX = cv.width < 300 ? 48 : 80, ryuH = 134;
   let raf = 0, t0 = 0, playing = false, done = false;
 
-  // where a point of the image (fractions u, v) lands on the stage for a given pose
-  function ryuPoint(pose, w, u, v) {
-    const lx = (u - 0.5) * w * pose.sx, ly = (v - 1) * ryuH * pose.sy;
-    const c = Math.cos(pose.rot), s = Math.sin(pose.rot);
-    return [baseX + pose.dx + lx * c - ly * s, floorY + lx * s + ly * c];
-  }
   function frame(now) {
     const t = playing ? now - t0 : 0;
     ctx.clearRect(0, 0, cv.width, cv.height);
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = "#2a1719"; ctx.fillRect(0, floorY, cv.width, 3);
-    // breathing in guard; on START: lean back to charge, snap forward, hold, settle back
-    let pose;
-    if (!playing) pose = RYU_POSES.guard;   // the frames already breathe
-    else if (t < 420) pose = blendPose(RYU_POSES.guard, RYU_POSES.charge, ease(t / 420));
-    else if (t < 520) pose = blendPose(RYU_POSES.charge, RYU_POSES.push, ease((t - 420) / 100));
-    else if (t < 1150) pose = RYU_POSES.push;
-    else pose = blendPose(RYU_POSES.push, RYU_POSES.guard, ease((t - 1150) / 300));
-
-    const fw = RYU_IMG.naturalWidth / RYU_FRAMES, fh = RYU_IMG.naturalHeight;
-    const w = fw ? Math.round(fw * ryuH / fh) : 0;
-    if (w) {
-      const f = Math.floor(now / RYU_FRAME_MS) % RYU_FRAMES;
-      ctx.save();
-      ctx.translate(baseX + pose.dx, floorY);
-      ctx.rotate(pose.rot);
-      ctx.scale(pose.sx, pose.sy);
-      ctx.drawImage(RYU_IMG, f * fw, 0, fw, fh, -w / 2, -ryuH, w, ryuH);
-      ctx.restore();
+    ctx.fillStyle = "#2a1719"; ctx.fillRect(0, cv.height - 3, cv.width, 3);
+    // the guard loops until the wind-up starts, then the move plays once and holds its last frame
+    const f = !playing || t < HADO_WINDUP
+      ? Math.floor(now / RYU_FRAME_MS) % RYU_GUARD
+      : Math.min(RYU_FRAMES - 1, RYU_GUARD + Math.floor((t - HADO_WINDUP) / RYU_FRAME_MS));
+    if (RYU_IMG.naturalWidth) {
+      const fw = RYU_IMG.naturalWidth / RYU_FRAMES;
+      ctx.drawImage(RYU_IMG, f * fw, 0, fw, RYU_IMG.naturalHeight, 0, 0, cv.width, cv.height);
     }
-    const fist = ryuPoint(pose, w || 70, RYU_FIST[0], RYU_FIST[1]);
-    if (playing && t < 520) {   // energy gathering at his fists
-      const k = Math.min(1, 0.3 + t / 450), bw = Math.round(24 * k), bh = Math.round(18 * k);
-      ctx.drawImage(balls[Math.floor(t / 60) % 2], Math.round(fist[0] - bw / 2), Math.round(fist[1] - bh / 2), bw, bh);
-    }
-    if (playing && t >= 500) {
-      const start = ryuPoint(RYU_POSES.push, w || 70, RYU_FIST[0], RYU_FIST[1]);
-      const x = Math.round(start[0] + (cv.width + 30 - start[0]) * Math.min(1, (t - 500) / 900)), y = Math.round(start[1] - 9);
-      for (let i = 1; i <= 4; i++) {   // trail
-        ctx.globalAlpha = 0.5 - i * 0.1;
-        ctx.fillStyle = "#2f7bff";
-        ctx.fillRect(x - i * 10, y + 4 + (i % 2) * 2, 8, 10 - (i % 2) * 4);
-      }
-      ctx.globalAlpha = 1;
-      if (x < cv.width + 8) ctx.drawImage(balls[Math.floor(t / 70) % 2], x, y, 24, 18);
-    }
-    if (playing && t > 1500 && !done) finish();
+    if (playing && t > HADO_END && !done) finish();
     if (!done) raf = requestAnimationFrame(frame);
   }
   function play() {
@@ -1158,7 +1100,7 @@ function startIntro() {
     playing = true; t0 = performance.now();
     box.classList.add("playing");
     hadokenSound();
-    setTimeout(() => shout.classList.add("on"), 500);
+    setTimeout(() => shout.classList.add("on"), HADO_FIREBALL);
   }
   function finish() {
     done = true; cancelAnimationFrame(raf);
