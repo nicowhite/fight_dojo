@@ -1029,8 +1029,31 @@ const FIREBALL = [
 ];
 const HADO_PAL = [{ o: "#0b2a6b", b: "#2f7bff", c: "#8fe3ff", w: "#ffffff" }, { o: "#0b2a6b", b: "#4f9bff", c: "#ffffff", w: "#8fe3ff" }];
 
-// Synthesized stand-in for the Hadoken (no audio files): rising charge, blast and thump,
-// plus the system's text-to-speech saying the move's name.
+// The voice clip is an optional file next to the page (sounds/hadoken.mp3). When it is
+// missing or fails to play, the system's text-to-speech says the move's name instead.
+const VOICE_URL = "sounds/hadoken.mp3";
+let voiceClip = null;
+function loadVoice() {
+  try {
+    const a = new Audio();
+    a.preload = "auto";
+    a.addEventListener("error", () => { voiceClip = null; });
+    a.src = VOICE_URL;
+    voiceClip = a;
+  } catch {}
+}
+
+function speakHadoken() {
+  try {
+    const say = new SpeechSynthesisUtterance("Hadouken!");
+    const ja = speechSynthesis.getVoices().find((v) => /^ja/i.test(v.lang));
+    if (ja) { say.voice = ja; say.text = "波動拳!"; }
+    say.rate = 1.25; say.pitch = 0.7; say.volume = 1;
+    speechSynthesis.speak(say);
+  } catch {}
+}
+
+// Synthesized effect (rising charge, blast and thump) plus the voice.
 function hadokenSound() {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (AC) {
@@ -1055,13 +1078,12 @@ function hadokenSound() {
       setTimeout(() => ac.close().catch(() => {}), 2000);
     } catch {}
   }
-  try {
-    const say = new SpeechSynthesisUtterance("Hadouken!");
-    const ja = speechSynthesis.getVoices().find((v) => /^ja/i.test(v.lang));
-    if (ja) { say.voice = ja; say.text = "波動拳!"; }
-    say.rate = 1.25; say.pitch = 0.7; say.volume = 1;
-    setTimeout(() => speechSynthesis.speak(say), 200);
-  } catch {}
+  setTimeout(() => {
+    const clip = voiceClip;
+    if (!clip) return speakHadoken();
+    try { clip.currentTime = 0; } catch {}
+    clip.play().catch(speakHadoken);
+  }, 200);
 }
 
 function startIntro() {
@@ -1084,6 +1106,7 @@ function startIntro() {
   const idle = drawSprite(document.createElement("canvas"), FIGHTER, base);
   const throwing = drawSprite(document.createElement("canvas"), THROW, base);
   const balls = HADO_PAL.map((pal) => drawSprite(document.createElement("canvas"), FIREBALL, pal));
+  loadVoice();
   const floorY = 54;
   let raf = 0, t0 = 0, playing = false, done = false;
 

@@ -5,6 +5,8 @@ Biblioteca de combos, tips, tutoriales y lore para **Street Fighter 6**, **Tekke
 - App publicada (edición): https://claude.ai/code/artifact/6edb0abc-c55c-4d5b-9bc1-c419b0ebfd8f
 - Sitio público (solo lectura): https://nicowhite.github.io/fight_dojo/
 - Código: `index.html` (un solo archivo), retratos en `portraits/`.
+- Voz de la intro: si existe `sounds/hadoken.mp3`, la intro la reproduce; si no, usa la síntesis de voz del navegador.
+  El archivo se publica junto al artefacto (`files`) y se sube al repo para GitHub Pages.
 - Las entradas se guardan en la base de datos del artefacto en claude.ai. `entries.json` es una copia que usan
   GitHub Pages y los visitantes sin sesión de Claude; se regenera al sincronizar.
 
