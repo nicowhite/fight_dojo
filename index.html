@@ -252,7 +252,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
   background: radial-gradient(ellipse at 50% 60%, #1a0d0f 0, var(--screen) 70%); transition: opacity .4s; }
 #intro.out { opacity: 0; pointer-events: none; }
 #intro .logo { font-size: clamp(26px, 7vw, 56px); }
-#intro canvas { width: min(100%, 480px); aspect-ratio: 386 / 247; height: auto; }
+#intro canvas { width: min(100%, 480px); aspect-ratio: 386 / 247; height: auto; margin-top: clamp(40px, 12vh, 140px); }
 #intro .prompt { font-family: var(--f-arcade); font-size: clamp(12px, 2.4vw, 18px); color: var(--gold); text-shadow: 3px 3px 0 #000; animation: blink 1s steps(1) infinite; background: none; border: 0; cursor: pointer; padding: 8px; }
 #intro .hint { margin: -12px 0 0; font-family: var(--f-mono); font-size: 20px; color: var(--muted); }
 #intro .skip { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: none; border: 0; cursor: pointer; font-family: var(--f-mono); font-size: 20px; color: var(--muted); text-decoration: underline; }
