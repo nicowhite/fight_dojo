@@ -273,7 +273,7 @@ footer .wrap::after { content: "INSERT COIN"; display: block; margin-top: 10px; 
   .abtn { width: 36px; height: 36px; font-size: 16px; }
   .roster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
-@media (prefers-reduced-motion: reduce) { .card, .card::after, .fighter, .game-card { transition: none; } .duel canvas, .duel span, footer .wrap::after, .game-card.sel .cursor { animation: none; } .card:hover, .fighter:hover, .game-card:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card, .card::after, .fighter, .game-card { transition: none; } .duel canvas, .duel span, footer .wrap::after, .game-card.sel .cursor, #intro .prompt { animation: none; } #intro, #intro .shout { transition: none; } .card:hover, .fighter:hover, .game-card:hover { transform: none; } }
 </style>
 
 <header class="band">
@@ -1062,7 +1062,8 @@ function hadokenSound() {
 }
 
 function startIntro() {
-  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  // With reduced motion the intro still shows, but Ryu holds still until START; the move plays only on request.
+  const still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const box = el("div"); box.id = "intro";
   box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "Intro de Fight Dojo");
   const logo = el("span", "logo"); logo.append("Fight ", el("span", null, "Dojo"));
@@ -1086,7 +1087,7 @@ function startIntro() {
     ctx.fillStyle = "#2a1719"; ctx.fillRect(0, cv.height - 3, cv.width, 3);
     // the guard loops until the wind-up starts, then the move plays once and holds its last frame
     const f = !playing || t < HADO_WINDUP
-      ? Math.floor(now / RYU_FRAME_MS) % RYU_GUARD
+      ? (still ? 0 : Math.floor(now / RYU_FRAME_MS) % RYU_GUARD)
       : Math.min(RYU_FRAMES - 1, RYU_GUARD + Math.floor((t - HADO_WINDUP) / RYU_FRAME_MS));
     if (RYU_IMG.naturalWidth) {
       const fw = RYU_IMG.naturalWidth / RYU_FRAMES;
