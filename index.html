@@ -1078,12 +1078,11 @@ function hadokenSound() {
       setTimeout(() => ac.close().catch(() => {}), 2000);
     } catch {}
   }
-  setTimeout(() => {
-    const clip = voiceClip;
-    if (!clip) return speakHadoken();
-    try { clip.currentTime = 0; } catch {}
-    clip.play().catch(speakHadoken);
-  }, 200);
+  // the clip starts on the press so its "ken" lands as the fireball leaves (0.5s); the spoken fallback needs a head start less
+  const clip = voiceClip;
+  if (!clip) { setTimeout(speakHadoken, 200); return; }
+  try { clip.currentTime = 0; } catch {}
+  clip.play().catch(() => setTimeout(speakHadoken, 200));
 }
 
 function startIntro() {
