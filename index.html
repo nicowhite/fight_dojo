@@ -995,11 +995,13 @@ $("#editForm").addEventListener("submit", async (ev) => {
 });
 
 // ---------- Intro: Hadoken ----------
-// Ryu for the intro: the owner's Third Strike artwork (images/ryu-intro.png), animated as a whole figure.
-// Each pose is a transform around the point between his feet: lean (radians), shift (px), and stretch.
+// Ryu for the intro: the owner's Third Strike guard animation, as a strip of frames (images/ryu-idle.png).
+// The guard loops the whole time; each pose adds a transform around the point between his feet:
+// lean (radians), shift (px) and stretch.
 const RYU_IMG = new Image();
-RYU_IMG.src = "images/ryu-intro.png";
-const RYU_FIST = [0.837, 0.299];   // front glove, as a fraction of the image
+RYU_IMG.src = "images/ryu-idle.png";
+const RYU_FRAMES = 13, RYU_FRAME_MS = 60;
+const RYU_FIST = [0.837, 0.315];   // front glove, as a fraction of one frame
 const RYU_POSES = {
   guard:  { rot: 0, dx: 0, sx: 1, sy: 1 },
   charge: { rot: -0.09, dx: -5, sx: 0.98, sy: 0.96 },
@@ -1115,19 +1117,21 @@ function startIntro() {
     ctx.fillStyle = "#2a1719"; ctx.fillRect(0, floorY, cv.width, 3);
     // breathing in guard; on START: lean back to charge, snap forward, hold, settle back
     let pose;
-    if (!playing) { const b = (1 - Math.cos(now / 380)) / 2; pose = { rot: 0, dx: 0, sx: 1 + b * 0.012, sy: 1 - b * 0.02 }; }
+    if (!playing) pose = RYU_POSES.guard;   // the frames already breathe
     else if (t < 420) pose = blendPose(RYU_POSES.guard, RYU_POSES.charge, ease(t / 420));
     else if (t < 520) pose = blendPose(RYU_POSES.charge, RYU_POSES.push, ease((t - 420) / 100));
     else if (t < 1150) pose = RYU_POSES.push;
     else pose = blendPose(RYU_POSES.push, RYU_POSES.guard, ease((t - 1150) / 300));
 
-    const w = RYU_IMG.naturalWidth ? Math.round(RYU_IMG.naturalWidth * ryuH / RYU_IMG.naturalHeight) : 0;
+    const fw = RYU_IMG.naturalWidth / RYU_FRAMES, fh = RYU_IMG.naturalHeight;
+    const w = fw ? Math.round(fw * ryuH / fh) : 0;
     if (w) {
+      const f = Math.floor(now / RYU_FRAME_MS) % RYU_FRAMES;
       ctx.save();
       ctx.translate(baseX + pose.dx, floorY);
       ctx.rotate(pose.rot);
       ctx.scale(pose.sx, pose.sy);
-      ctx.drawImage(RYU_IMG, -w / 2, -ryuH, w, ryuH);
+      ctx.drawImage(RYU_IMG, f * fw, 0, fw, fh, -w / 2, -ryuH, w, ryuH);
       ctx.restore();
     }
     const fist = ryuPoint(pose, w || 70, RYU_FIST[0], RYU_FIST[1]);
